@@ -1,0 +1,36 @@
+﻿def 1: function đề lấy tags
+def 2: function để lưu tags
+def 3: function để tạo file .asx (dùng def 1)
+
+
+class Playlist:
+	- tên playlist
+	- đường dẫn đến các file nhạc > lưu vô list
+	- playlist file (.asx)
+	https://en.wikipedia.org/wiki/Playlist, https://en.wikipedia.org/wiki/Advanced_Stream_Redirector
+	method:
+	- set name
+	- get number of song
+	- get total duration
+	- add file
+	- add forder
+	- delete file
+
+
+Class PlaylistManager:
+	- set để lưu instance Playlist
+	- repeat (off | song, playlist)
+	- shuffler (off | song, album)
+	- temp list để lưu các bài đã play
+	- current playlist
+	- current playing song
+	method:
+	- select file nhạc để play
+	- add playlist
+	- load playlist (nếu playlist hiện tại trống, chỉ cần load songs. nếu ngược lại, tạo mới playlist (add playlist), rồi load songs)
+	- delete playlist
+	- rename playlist
+	
+GUI
+
+		

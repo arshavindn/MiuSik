@@ -1,0 +1,25 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+
+<file alias="artistinfo.png">Icons/MainLayoutSwitch/artistinfo.png</file>
+<file alias="lyrics.png">Icons/MainLayoutSwitch/lyrics.png</file>
+<file alias="playlist.png">Icons/MainLayoutSwitch/playlist.png</file>
+
+<file alias="next.png">Icons/PlayControl/next.png</file>
+<file alias="pause.png">Icons/PlayControl/pause.png</file>
+<file alias="play.png">Icons/PlayControl/play.png</file>
+<file alias="previous.png">Icons/PlayControl/previous.png</file>
+<file alias="stop.png">Icons/PlayControl/stop.png</file>
+<file alias="volume.png">Icons/PlayControl/volume.png</file>
+
+<file alias="add_tab.png">Icons/TabBar/add_tab.png</file>
+
+<file alias="add_file.png">Icons/ToolBar/add_file.png</file>
+<file alias="info.png">Icons/ToolBar/info.png</file>
+<file alias="load.png">Icons/ToolBar/load.png</file>
+<file alias="open_folder.png">Icons/ToolBar/open_folder.png</file>
+<file alias="save.png">Icons/ToolBar/save.png</file>
+<file alias="setting.png">Icons/ToolBar/setting.png</file>
+
+</qresource>
+</RCC>

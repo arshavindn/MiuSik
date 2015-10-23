@@ -1,0 +1,6 @@
+﻿"""
+TO DO:
++ viết lyrics layout và artist info layout
++ tính năng stream RADIO - nghe radio online
++ tính năng search nhạc từ playlist và cả từ mp3.zing, stream nhạc từ internet nghe luôn
+"""
