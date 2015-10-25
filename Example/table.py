@@ -1,12 +1,16 @@
 from PyQt4 import QtGui, QtCore
 import sys
+import os
 from src.metadata.mp3 import MP3Format
+from src.metadata.tags import tag_data
 
 SONGS = ['D:\Drive E\Music\Arms - Christina Perri.mp3',
          'D:\Drive E\Music\Air Supply - All Out Of Love.mp3',
          'D:\Drive E\Music\Hoang Ton - Bai Hat Tang Em.mp3',
          'D:\Drive E\Music\M-TP - Con Mua Ngang Qua.mp3']
 TAGS = ['Playing', 'Title', 'Album', 'Artist', 'Length']
+type_format = []
+
 
 
 def get_tags(uri):
@@ -27,20 +31,29 @@ class Example(QtGui.QWidget):
     def __init__(self, parent=None):
         super(Example, self).__init__(parent)
         self.table = QtGui.QTableWidget()
-        # tags = ['Playing', 'Title', 'Album', 'Artist', 'Length']
         self.table.setSortingEnabled(True)
+        # Enable dragging horizontal header
         self.table.horizontalHeader().setMovable(True)
         self.table.horizontalHeader().setDragEnabled(True)
         self.table.horizontalHeader().setDragDropMode(QtGui.QAbstractItemView.InternalMove)
+
         self.table.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.table.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.table.setColumnCount(5)
         for index in range(len(TAGS)):
             item = QtGui.QTableWidgetItem(QtCore.QString(TAGS[index]))
             self.table.setHorizontalHeaderItem(index, item)
-        hbox = QtGui.QHBoxLayout()
-        hbox.addWidget(self.table)
-        self.setLayout(hbox)
+        vbox = QtGui.QVBoxLayout()
+        vbox.addWidget(self.table)
+
+        self.print_tags_button = QtGui.QPushButton("Print tags")
+        self.print_tags_button.clicked.connect(self.print_tags)
+        vbox.addWidget(self.print_tags_button)
+
+        self.setLayout(vbox)
+        qss_file = open('D:\Cloud\Dropbox\Programming\Code\py\Miusik\Example\stylesheet\example.qss').read()
+        self.setStyleSheet(qss_file)
+
         self.show()
 
     def set_row_content(self, row, uri):
@@ -67,6 +80,18 @@ class Example(QtGui.QWidget):
         for index in range(len(songs)):
             row = curent_row + index + 1
             self.set_row_content(row, songs[index])
+
+    def print_tags(self):
+        all_tags = []
+        for row in range(self.table.rowCount()):
+            row_content = []
+            for col in range(self.table.columnCount()):
+                if self.table.item(row, col) is not None:
+                    row_content.append(self.table.item(row, col).text().__str__())
+                # print self.table.item(row, col)
+            all_tags.append(row_content)
+        for item in all_tags:
+            print item
 
 
 def test_tag():
