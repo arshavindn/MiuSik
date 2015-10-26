@@ -1,0 +1,7 @@
+/*QTableView::item:focus {
+    background-color: transparent;
+}*/
+
+QPushButton {
+    outline: none;
+}
