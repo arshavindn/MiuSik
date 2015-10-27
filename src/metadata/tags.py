@@ -55,7 +55,8 @@ tag_data = {
 
     # various internal tags
     '__bitrate':        _TD('Bitrate',      'bitrate', editable=False),
-    '__basedir':        None,
+    '__basedir':        _TD('Folder',       'location', editable=False),
+    '__basename':       _TD('File name',    'text', editable=False),
     '__date_added':     _TD('Date added',   'timestamp', editable=False),
     '__last_played':    _TD('Last played',  'timestamp', editable=False),
     '__length':         _TD('Length',       'time', editable=False),

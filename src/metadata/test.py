@@ -16,4 +16,4 @@ def test_tags_module():
     print tag_data['album']
 
 if __name__ == '__main__':
-    test_tags_module()
+    test_tags_pair()
