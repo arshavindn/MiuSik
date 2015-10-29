@@ -100,3 +100,21 @@ class Track(object):
             return f
         except Exception:
             return False
+
+    def write_tags(self):
+        """
+            Writes tags to the file for this Track.
+
+            Returns False if unsuccessful, and a Format object from
+            `xl.metadata` otherwise.
+        """
+        try:
+            f = metadata.get_format(self.get_loc())
+            if f is None:
+                return False  # not a supported type
+            f.write_tags(self.__tags)
+            return f
+        except IOError:
+            return False
+        except Exception:
+            return False
