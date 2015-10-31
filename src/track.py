@@ -43,6 +43,27 @@ class Track(object):
         """
         return os.path.basename(self.get_loc())
 
+    def get_tag_raw(self, tag, join=False):
+        """
+            Get the raw value of a tag.  For non-internal tags, the
+            result will always be a list of unicode strings.
+
+            :param tag: The name of the tag to get
+            :param join: If True, joins lists of values into a
+                single value.
+        """
+        if tag == '__basename':
+            value = self.get_basename()
+        elif tag == '__startoffset':  # necessary?
+            value = self.__tags.get(tag, 0)
+        else:
+            value = self.__tags.get(tag)
+
+        if join and value and not tag.startswith('__'):
+            return u';'.join(value)
+
+        return value
+
     def __set_tag_raw(self, tag, values):
         """
             Private function for setting tag to __tags
