@@ -1,3 +1,4 @@
 class Album(object):
     def __init__(self):
-        pass
+        self.__info = {}  # name, artist, date
+        self.__songs = {}

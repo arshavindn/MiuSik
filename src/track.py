@@ -13,6 +13,8 @@ class Track(object):
         """
         self.__tags = {}
         self.__tags['__loc'] = loc
+        self.__tags['__date_added'] = time.localtime(time.time())
+        self.set_tags()
 
     def __str__(self):
         # return self.__tags.get('title') + ', ' + self.__tags.get('album') + \
@@ -64,14 +66,18 @@ class Track(object):
 
         return value
 
-    def __set_tag_raw(self, tag, values):
+    def set_tag_raw(self, tag, values):
         """
             Private function for setting tag to __tags
         """
+        if tag == "__loc":
+            pass
+
         if not isinstance(values, list):
             if not tag.startswith("__"):  # internal tags don't have to be lists
                 values = [values]
         else:
+            # save memory by removing some null values
             [value for value in values if value not in (None, u'')]
 
         if not values:
@@ -98,7 +104,7 @@ class Track(object):
                 return False  # not a supported type
             ntags = f.read_all()
             for k, v in ntags.iteritems():
-                self.__set_tag_raw(k, v)
+                self.set_tag_raw(k, v)
 
             # remove tags that have been deleted in the file, while
             # taking into account that the db may have tags not
@@ -110,14 +116,14 @@ class Track(object):
                 supported_tags = f.tag_mapping.keys()
             for tag in supported_tags:
                 if tag not in ntags.keys():
-                    self.__set_tag_raw(tag, None)
+                    self.set_tag_raw(tag, None)
 
             # fill out file specific items
             mtime = time.localtime(os.stat(self.get_loc()).st_mtime)
-            self.__set_tag_raw('__modified', mtime)
+            self.set_tag_raw('__modified', mtime)
             # TODO: this probably breaks on non-local files
             folder_path = self.get_dir_path()
-            self.__set_tag_raw('__basedir', folder_path)
+            self.set_tag_raw('__basedir', folder_path)
             return f
         except Exception:
             return False

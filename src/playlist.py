@@ -6,6 +6,7 @@ class Playlist():
         if name:
             self.name = name
         self.__songs = {}
+        self.__total_duration = 0
 
     def set_name(self, name):
         self.name = name
@@ -17,13 +18,14 @@ class Playlist():
         for song in songs:
             if self.__songs.get(song) is None:
                 self.__songs[song] = Track(song)
-                self.__songs[song].set_tags()
+                self.__total_duration += self.__songs[song]['__length']
 
     def remove_song(self, song):
         """
             Remove song from playlist with given file path of song.
         """
         try:
+            self.__total_duration -= self.__songs[song]['__length']
             del self.__songs[song]
         except KeyError:
             pass
@@ -33,3 +35,6 @@ class Playlist():
             Return number of songs in playlist.
         """
         return len(self.__songs)
+
+    def get_total_duration(self):
+        return self.__total_duration
