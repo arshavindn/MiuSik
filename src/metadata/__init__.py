@@ -1,7 +1,7 @@
-from src.metadata._base import BaseFormat, NotWritable, NotReadable
+from metadata._base import BaseFormat, NotWritable, NotReadable
 import os
 
-from src.metadata import mp3
+from metadata import mp3
 
 formats = {
     'mp3': mp3.MP3Format,
