@@ -9,4 +9,5 @@ def testTrack():
     test_track.test1()
 
 if __name__ == '__main__':
-    testTrack()
+    # testTrack()
+    testMetadata()
