@@ -1,11 +1,13 @@
 from track import Track
+from album import Album
 
 
 class Playlist():
     def __init__(self, name=None):
         if name:
             self.name = name
-        self.__songs = {}
+        self.__songs = {}  # pairs of song location and Track object
+        self.__albums = {}  # pairs of album, artist tuple and Album object
         self.__total_duration = 0
 
     def set_name(self, name):
@@ -18,6 +20,7 @@ class Playlist():
         for song in songs:
             if self.__songs.get(song) is None:
                 self.__songs[song] = Track(song)
+
                 self.__total_duration += self.__songs[song]['__length']
 
     def remove_song(self, song):
