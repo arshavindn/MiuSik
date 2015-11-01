@@ -1,10 +1,12 @@
-from metadata._base import BaseFormat, NotWritable, NotReadable
+from src.metadata._base import BaseFormat, NotWritable, NotReadable
 import os
 
-from metadata import mp3
+from src.metadata import mp3, flac
+
 
 formats = {
     'mp3': mp3.MP3Format,
+    'flac': flac.FlacFormat
 }
 
 

@@ -65,8 +65,6 @@ tag_data = {
     '__playtime':       _TD('Play time',    'time', editable=False),
     '__playcount':      _TD('Times played', 'int', editable=False),
     '__rating':         None,  # currently special.
-    '__startoffset':    _TD('Start offset', 'time', min=0, max=3600),  # TODO: calculate these parameters
-    '__stopoffset':     _TD('Stop offset',  'time', min=0, max=3600),
 }
 
 for k, v in tag_data.iteritems():
