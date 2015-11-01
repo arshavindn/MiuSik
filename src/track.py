@@ -1,10 +1,13 @@
 import os
-import time
+from datetime import datetime
 from src import metadata
+
+date_format = "%m-%d-%Y"
+datetime_format = "%m-%d-%Y %H:%M"
 
 
 class Track(object):
-    __slots__ = ["__tags"]
+    __slots__ = ["__tags", "_scan_valid"]
 
     def __init__(self, loc):
         """
@@ -12,8 +15,8 @@ class Track(object):
                 loc: must be valid unicode text location
         """
         self.__tags = {}
+        self._scan_valid = None
         self.__tags['__loc'] = loc
-        self.__tags['__date_added'] = time.localtime(time.time())
         self.set_tags()
 
     def __str__(self):
@@ -27,9 +30,12 @@ class Track(object):
         return round(size / 1024.0 / 1024.0, 2)
 
     def get_loc(self):
+        """
+            Return location.
+        """
         return self.__tags['__loc']
 
-    def get_dir_path(self):
+    def get_basedir(self):
         """
             Return folder path of file path
             Ex: file_path = u"D:/Music/It Will Rain.mp3"
@@ -41,7 +47,7 @@ class Track(object):
         """
             Return file name
             Ex: file_path = u"D:/Music/It Will Rain.mp3"
-            dir_path = u"It Will Rain.mp3"
+            basename = u"It Will Rain.mp3"
         """
         return os.path.basename(self.get_loc())
 
@@ -70,7 +76,7 @@ class Track(object):
         """
             Private function for setting tag to __tags
         """
-        if tag == "__loc":
+        if tag in ("__loc", "__basedir", "__basename"):
             pass
 
         if not isinstance(values, list):
@@ -89,6 +95,9 @@ class Track(object):
             self.__tags[tag] = values
 
     def list_tags(self):
+        """
+            List all tags in self.__tags.
+        """
         return self.__tags.keys() + ['__basename']
 
     def set_tags(self):
@@ -101,6 +110,7 @@ class Track(object):
         try:
             f = metadata.get_format(self.get_loc())
             if f is None:
+                self._scan_valid = False
                 return False  # not a supported type
             ntags = f.read_all()
             for k, v in ntags.iteritems():
@@ -119,13 +129,16 @@ class Track(object):
                     self.set_tag_raw(tag, None)
 
             # fill out file specific items
-            mtime = time.localtime(os.stat(self.get_loc()).st_mtime)
+            mtime = unicode(datetime.fromtimestamp(os.stat(self.get_loc()).st_mtime).strftime(datetime_format))
             self.set_tag_raw('__modified', mtime)
             # TODO: this probably breaks on non-local files
-            folder_path = self.get_dir_path()
-            self.set_tag_raw('__basedir', folder_path)
+            self.set_tag_raw('__basedir', self.get_basedir())
+            self.set_tag_raw('__basename', self.get_basename())
+            self._scan_valid = True
             return f
-        except Exception:
+        except Exception, e:
+            print e
+            self._scan_valid = False
             return False
 
     def write_tags(self):
