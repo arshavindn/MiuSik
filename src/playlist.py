@@ -11,7 +11,7 @@ class Playlist():
         self.__albums = {}  # pairs of (album, artist) tuple and Album object
         self.__total_duration = 0
 
-    def set_name(self, name):
+    def rename(self, name):
         self.name = name
 
     def add_songs(self, songs):
@@ -33,17 +33,19 @@ class Playlist():
                 else:
                     self.__albums[(track_album, track_artist).add_song(track)]
 
-    def remove_song(self, song):
+    def remove_song(self, loc):
         """
-            Remove song from playlist with given file path of song.
+            Remove song from playlist with given location.
         """
-        track = self.__songs.get(song)
+        track = self.__songs.get(loc)
         if track:
             self.__total_duration -= track.get_tag_raw('__length')
             track_album = track.get_tag_raw('album')
             track_artist = track.get_tag_raw('artist')
-            del self.__songs[song]
-            del self.__albums[(track_album, track_artist)]
+            del self.__songs[loc]
+            self.__albums[(track_album, track_artist)].remove_song(loc)
+            if len(self.__albums[(track_album, track_artist)]) == 0:
+                del self.__albums[(track_album, track_artist)]
 
     def __len__(self):
         """
