@@ -8,4 +8,5 @@ def test1():
     # rating = song1.get_tag_raw('__rating')
     # print rating
     song1.set_tags()
+    print song1.get_tag_raw('__length')
     print song1
