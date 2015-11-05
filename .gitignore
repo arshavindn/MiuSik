@@ -4,6 +4,9 @@
 .idea/
 *.pyc
 .gitignore
+*.dat
+*.dir
+*.bak
 
 
 
