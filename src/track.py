@@ -129,7 +129,8 @@ class Track(object):
                     self.set_tag_raw(tag, None)
 
             # fill out file specific items
-            mtime = unicode(datetime.fromtimestamp(os.stat(self.get_loc()).st_mtime).strftime(datetime_format))
+            mtime = unicode(datetime.fromtimestamp(
+                            os.stat(self.get_loc()).st_mtime).strftime(datetime_format))
             self.set_tag_raw('__modified', mtime)
             # TODO: this probably breaks on non-local files
             self.set_tag_raw('__basedir', self.get_basedir())
