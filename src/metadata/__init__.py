@@ -12,10 +12,10 @@ formats = {
 def get_format(loc):
     try:
         loc = loc.decode('utf-8')
-    except UnicodeDecodeError:
+    except:
         pass
 
-    ext = os.path.splitext(loc)[1][1:]  # get file extension
+    ext = str(os.path.splitext(loc)[1][1:])  # get file extension
     ext = ext.lower()
     try:
         formatclass = formats[ext]
