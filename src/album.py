@@ -2,6 +2,8 @@ from track import Track
 
 
 class Album(object):
+    __slots__ = ["__info", "__songs"]
+
     def __init__(self, album, artist, date=None):
         self.__info = {}  # album, artist, date
         self.__info['album'] = album
@@ -25,9 +27,8 @@ class Album(object):
     def add_song(self, trackobj):
         if isinstance(trackobj, Track):
             if trackobj.get_tag_raw('album') == self.__info['album'] and \
-                    trackobj.get_tag_raw('album') == self.__info['artist'] and \
-                    trackobj.get_loc() not in self.__songs:
-                self.__songs.append(trackobj.get_loc())
+                    trackobj.get_tag_raw('album') == self.__info['artist']:
+                self.unchecked_add_song(trackobj)
                 return True
             else:
                 return False
@@ -37,6 +38,14 @@ class Album(object):
     def unchecked_add_song(self, trackobj):
         if trackobj.get_loc() not in self.__songs:
             self.__songs.append(trackobj.get_loc())
+
+            if not self.__info.get('cover'):
+                cover = trackobj.get_tag_disk('cover')
+                if not cover:
+                    cover = trackobj.get_tag_disk('coverart')
+
+                if cover:
+                    self.__info['cover'] = cover
 
     def remove_song(self, loc):
         try:

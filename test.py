@@ -17,5 +17,5 @@ def testAlbumDB():
     test_albumdb.test1()
 
 if __name__ == '__main__':
-    testAlbumDB()
+    testTrack()
     #testMetadata()

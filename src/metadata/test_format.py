@@ -9,7 +9,7 @@ def test_tags_pair():
     song3 = MP3Format('D:/Drive E/Music/TV In Black White - Lana Del Rey.mp3')
     # lst = song1._get_tag(song1._get_raw(), 'TIT2')
     # print lst
-    tag_pairs1 = song1.read_all()
+    tag_pairs1 = song1.read_tags('coverart')
     tag_pairs2 = song2.read_all()
     tag_pairs3 = song3.read_tags(['album', 'artist', 'title'])
     print tag_pairs1

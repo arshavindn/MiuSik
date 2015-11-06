@@ -68,14 +68,39 @@ class Track(object):
             value = self.__tags.get(tag)
 
         if join and value and not tag.startswith('__'):
-            return u';'.join(value)
+            value = u";".join([item for item in value if item not in (None, u'', '')])
 
         return value
 
+    def get_tag_disk(self, tag):
+        """
+            Read a tag directly from disk. Can be slow, use with caution.
+
+            Intended for use with large fields like covers and
+            lyrics that shouldn't be loaded to the in-mem db.
+        """
+        try:
+            f = metadata.get_format(self.get_loc())
+        except Exception:  # TODO: What exception?
+            return None
+        if not f:
+            return None
+        return f.read_tags([tag]).get(tag)
+
+    def list_tags_disk(self):
+        """
+            List all the tags directly from file metadata.
+            Can be slow, use with caution.
+        """
+        try:
+            f = metadata.get_format(self.get_loc())
+        except Exception:  # TODO: What exception?
+            return None
+        if not f:
+            return None
+        return f._get_raw().keys()
+
     def set_tag_raw(self, tag, values):
-        """
-            Private function for setting tag to __tags
-        """
         if tag in ("__loc", "__basedir", "__basename"):
             pass
 
@@ -84,7 +109,8 @@ class Track(object):
                 values = [values]
         else:
             # save memory by removing some null values
-            [value for value in values if value not in (None, u'')]
+            if len(values) > 1:
+                [value for value in values if value not in (None, u'', '')]
 
         if not values:
             try:
@@ -146,8 +172,8 @@ class Track(object):
         """
             Writes tags to the file for this Track.
 
-            Returns False if unsuccessful, and a Format object from
-            `xl.metadata` otherwise.
+            Returns False if unsuccessful, and
+            a Format object from 'metadata' otherwise.
         """
         try:
             f = metadata.get_format(self.get_loc())

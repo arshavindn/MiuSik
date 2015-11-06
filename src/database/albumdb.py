@@ -23,11 +23,7 @@ class AlbumDB():
 
     def add_album(self, albumobj):
         album = albumobj.get_info('album')
-        if not album:
-            album = u'Unknown'
         artist = albumobj.get_info('artist')
-        if not artist:
-            artist = u'Unknown'
         if not self.get_album(album, artist):
             self.__albums[(album, artist)] = albumobj
             self._added = True
@@ -46,14 +42,10 @@ class AlbumDB():
     def add_track_to_album(self, trackobj):
         """
             Add track to album in data,
-            if album does not exist, creat new album.
+            if album does not exist, create new album.
         """
         tr_album = trackobj.get_tag_raw('album', True)
-        if not tr_album:
-            tr_album = u'Unknown'
         tr_artist = trackobj.get_tag_raw('artist', True)
-        if not tr_artist:
-            tr_artist = u'Unknown'
         if self.get_album(tr_album, tr_artist):
             self.get_album(tr_album, tr_artist).unchecked_add_song(trackobj)
             if (tr_album, tr_artist) not in self._unsaved_updated_albums:
@@ -66,11 +58,7 @@ class AlbumDB():
 
     def remove_track_from_album(self, trackobj):
         tr_album = trackobj.get_tag_raw('album', True)
-        if not tr_album:
-            tr_album = u'Unknown'
         tr_artist = trackobj.get_tag_raw('artist', True)
-        if not tr_artist:
-            tr_artist = u'Unknown'
         if self.get_album(tr_album, tr_artist):
             check = self.get_album(tr_album, tr_artist).remove_song(trackobj.get_loc())
             if check and \
