@@ -1,94 +1,95 @@
-from track import Track, datetime_format
+from track import Track
 from album import Album
-from datetime import datetime
 import os
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 
 class Playlist():
     def __init__(self, name, saved_plst=None):
         self.name = name
-        if saved_plst:
-            pass
-        self.__songs = {}  # pairs of song location and Track object
-        self.__albums = {}  # pairs of (album, artist) tuple and Album object
+        self.__albums = {}  # pairs of (album, albumartist) tuple and Album object
         self.__total_duration = 0
-        self.__create_plst_dir()
-
-    def rename(self, name):
-        home_dir = os.path.expanduser('~')
-        app_dir = home_dir + '/Miusik'
-        os.rename(app_dir + '/' + self.name, app_dir + '/' + name)
-        self.name = name
-
-    def get_plst_dir(self):
-        pass
-
-    def add_song(self, song):
-        """
-            song: file path of song.
-        """
-        if self.__songs.get(song) is None:
-            track = Track(song)
-            if track._scan_valid:
-                date_added = unicode(datetime.now().strftime(datetime_format))
-                track.set_tag_raw('__date_added', date_added)
-                self.__songs[song] = track
-                self.__total_duration += track.get_tag_raw('__length')
-                track_album = track.get_tag_raw('album')
-                track_artist = track.get_tag_raw('artist')
-                # add song to album
-                if self.__albums.get((track_album, track_artist)) is None:  # if album does not exist in self.__albums
-                    album = Album(track_album, track_artist)
-                    album.add_song(track)
-                    self.__albums[(track_album, track_artist)] = album
-                else:
-                    self.__albums[(track_album, track_artist).add_song(track)]
-                return track
-            else:
-                return False
-        else:
-            return False
-
-    def remove_song(self, loc):
-        """
-            Remove song from playlist with given location.
-        """
-        track = self.__songs.get(loc)
-        if track:
-            self.__total_duration -= track.get_tag_raw('__length')
-            track_album = track.get_tag_raw('album')
-            track_artist = track.get_tag_raw('artist')
-            del self.__songs[loc]
-            self.__albums[(track_album, track_artist)].remove_song(loc)
-            if len(self.__albums[(track_album, track_artist)]) == 0:
-                del self.__albums[(track_album, track_artist)]
-
-    def get_track(self, loc):
-        """
-            Return track object of given location.
-            If not found, return None.
-        """
-        return self.__songs.get(loc)
+        if saved_plst:
+            self.__albums = dict(saved_plst.get_albums_dict())
+            self.__total_duration = saved_plst.get_total_duration()
 
     def __len__(self):
         """
             Return number of songs in playlist.
         """
-        return len(self.__songs)
+        songs_num = 0
+        for album in self.get_albums():
+            songs_num += len(album)
+        return songs_num
+
+    def get_albums_dict(self):
+        return self.__albums
+
+    def get_albums_keys(self):
+        return self.__albums.iterkeys()
+
+    def get_albums(self):
+        return self.__albums.itervalues()
 
     def get_total_duration(self):
         return self.__total_duration
 
-    def __create_plst_dir(self):
-        home_dir = os.path.expanduser('~')
-        app_dir = home_dir + '/Miusik'
-        if not os.path.exists(app_dir):
-            os.makedirs(app_dir)
-        if not os.path.exists(app_dir + '/' + self.name):
-            os.makedirs(app_dir + '/' + self.name)
+    def rename(self, name):
+        self.name = name
+
+    def get_album_from_info(self, album, albumartist):
+        return self.__albums.get((album, albumartist))
+
+    def add_track(self, loc, trackdb, coverdb):
+        track = trackdb.get_track_by_loc(loc)
+        if not track:
+            track = Track(loc)
+            respone = trackdb.add_track_from_trackobj(track)
+            if not respone:
+                return False
+        tr_album = track.get_tag_raw('album', True)
+        tr_albumartist = track.get_tag_raw('albumartist', True)
+        if tr_albumartist == u'':
+            tr_albumartist = track.get_tag_raw('artist', True)
+        album = self.get_album_from_info(tr_album, tr_albumartist)
+        if not album:
+            # create new album
+            album = Album(tr_album, tr_albumartist)
+            self.__albums[(tr_album, tr_albumartist)] = album
+        album.unchecked_add_song(track)
+        self.__total_duration += track.get_tag_raw('__length')
+
+        cover = coverdb.get_cover(tr_album, tr_albumartist)
+        if not cover:
+            tr_cover = track.get_tag_disk('cover')
+            if tr_cover:
+                coverdb.add_cover(tr_album, tr_albumartist, tr_cover)
+        return True
+
+    def remove_track(self, loc, trackdb):
+        """
+            Remove song from playlist with given location.
+        """
+        track = trackdb.get_track_by_loc(loc)
+        if not track:
+            track = Track(loc)
+            if not track._scan_valid:
+                return False
+        tr_album = track.get_tag_raw('album', True)
+        tr_albumartist = track.get_tag_raw('albumartist', True)
+        if tr_albumartist == u'':
+            tr_albumartist = track.get_tag_raw('artist', True)
+        album = self.get_album_from_info(tr_album, tr_albumartist)
+        if not album:
+            return False
+        return album.remove_track(loc)
 
     def save_playlist(self, loc):
-        pass
+        with open(loc, 'w+b') as output:
+            pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
 
     def load_playlist(self, loc):
         pass

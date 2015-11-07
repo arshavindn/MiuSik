@@ -21,17 +21,17 @@ class TrackDB():
     def get_keys(self):
         return self.__songs.iterkeys()
 
-    def add_song_from_loc(self, loc):
-        if not self.__songs.get(loc):
+    def add_track_from_loc(self, loc):
+        if loc not in self.get_keys():
             track = Track(loc)
-            self.add_song_from_trackobj(track)
+            self.add_track_from_trackobj(track)
         else:
             return False
 
-    def add_song_from_trackobj(self, trackobj):
+    def add_track_from_trackobj(self, trackobj):
         if not trackobj._scan_valid:
             return False
-        if not self.__songs.get(trackobj.get_loc()):
+        if trackobj.get_loc() not in self.get_keys():
             if not trackobj.get_tag_raw('__date_added'):
                 date_added = unicode(datetime.now().strftime(datetime_format))
                 trackobj.set_tag_raw('__date_added', date_added)
@@ -54,7 +54,7 @@ class TrackDB():
         except KeyError:
             return False
 
-    def get_song_by_loc(self, loc):
+    def get_track_by_loc(self, loc):
         return self.__songs.get(loc)
 
     def load_db(self, loc=None, merge=True):

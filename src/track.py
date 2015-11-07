@@ -68,7 +68,7 @@ class Track(object):
             value = self.__tags.get(tag)
 
         if join and value and not tag.startswith('__'):
-            value = u";".join([item for item in value if item not in (None, u'', '')])
+            value = u"; ".join([item for item in value if item not in (None, u'', '')])
 
         return value
 
@@ -125,6 +125,12 @@ class Track(object):
             List all tags in self.__tags.
         """
         return self.__tags.keys() + ['__basename']
+
+    def get_album_n_albumartist(self):
+        albumartist = self.get_tag_raw('albumartist', True)
+        if albumartist == u'':
+            albumartist = self.get_tag_raw('artist', True)
+        return (self.get_tag_raw('album', True), albumartist)
 
     def set_tags(self):
         """
