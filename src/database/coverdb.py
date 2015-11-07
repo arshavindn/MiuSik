@@ -1,4 +1,6 @@
+from ast import literal_eval
 import shelve
+
 
 class CoverDB():
     def __init__(self, loc):
@@ -25,7 +27,7 @@ class CoverDB():
 
     def remove_cover(self, album, albumartist):
         try:
-            del self.__covers((album, albumartist))
+            del self.__covers[(album, albumartist)]
             self._removed = True
         except KeyError:
             pass
@@ -34,9 +36,12 @@ class CoverDB():
         al_ar = trackobj.get_album_n_albumartist()
         self.remove_cover(al_ar[0], al_ar[1])
 
+    def get_cover(self, album, albumartist):
+        self.__covers.get((album, albumartist))
+
     def load_db(self, loc=None):
         if not loc:
-            loc = self.loc
+            loc = self._loc
 
         coverdata = shelve.open(loc, protocol=2)
         # convert key in coverdata from string to tuple

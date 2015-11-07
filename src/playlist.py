@@ -1,6 +1,5 @@
 from track import Track
 from album import Album
-import os
 try:
     import cPickle as pickle
 except ImportError:
@@ -8,13 +7,13 @@ except ImportError:
 
 
 class Playlist():
-    def __init__(self, name, saved_plst=None):
-        self.name = name
+    def __init__(self, name, loc=None):
+        self._name = name
         self.__albums = {}  # pairs of (album, albumartist) tuple and Album object
         self.__total_duration = 0
-        if saved_plst:
-            self.__albums = dict(saved_plst.get_albums_dict())
-            self.__total_duration = saved_plst.get_total_duration()
+        if loc:
+            self._loc = loc
+            self.load_self()
 
     def __len__(self):
         """
@@ -24,6 +23,9 @@ class Playlist():
         for album in self.get_albums():
             songs_num += len(album)
         return songs_num
+
+    def set_loc(self, loc):
+        self._loc = loc
 
     def get_albums_dict(self):
         return self.__albums
@@ -38,7 +40,7 @@ class Playlist():
         return self.__total_duration
 
     def rename(self, name):
-        self.name = name
+        self._name = name
 
     def get_album_from_info(self, album, albumartist):
         return self.__albums.get((album, albumartist))
@@ -87,9 +89,14 @@ class Playlist():
             return False
         return album.remove_track(loc)
 
-    def save_playlist(self, loc):
+    def save_self(self, loc=None):
+        if not loc:
+            loc = self._loc
         with open(loc, 'w+b') as output:
             pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
 
-    def load_playlist(self, loc):
-        pass
+    def load_self(self, loc=None):
+        if not loc:
+            loc = self._loc
+        with open(loc, 'rb') as input:
+            self = pickle.load(input)
