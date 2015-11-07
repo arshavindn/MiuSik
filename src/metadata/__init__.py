@@ -12,7 +12,7 @@ formats = {
 def get_format(loc):
     try:
         loc = loc.decode('utf-8')
-    except:
+    except UnicodeEncodeError:
         pass
 
     ext = str(os.path.splitext(loc)[1][1:])  # get file extension

@@ -11,6 +11,7 @@ loc3 = songs[7]
 
 print len(loc3)
 
+
 def test1():
     song2 = track.Track(loc3)
     # rating = song1.get_tag_raw('__rating')
