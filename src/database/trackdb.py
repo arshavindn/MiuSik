@@ -1,4 +1,5 @@
 from src.track import Track, datetime_format
+from src import common
 from datetime import datetime
 import shelve
 
@@ -63,14 +64,22 @@ class TrackDB():
         """
         if not loc:
             loc = self._loc
-
-        trackdata = shelve.open(loc, protocol=2)  # highest protocol
-        trackdata_keys = [key.decode('utf-8') for key in trackdata.iterkeys()]
+        try:
+            trackdata = shelve.open(loc, flag='c',protocol=2)  # highest protocol
+            if len(trackdata) == 0:
+                trackdata["__dbversion"] = common.TRACKDB_VER
+            elif trackdata.get("__dbversion") != common.TRACKDB_VER:
+                raise common.VersionError
+            else:
+                return
+        except Exception:
+            return
+        data_keys = [key.decode('utf-8') for key in trackdata.iterkeys()]
         if merge:
-            diff = set(trackdata_keys) - set(self.__songs)
+            diff = set(data_keys) - set(self.__songs)
         else:
             self.__songs = {}
-            diff = set(trackdata_keys)
+            diff = set(data_keys)
         for key in diff:
             if isinstance(trackdata[key.encode('utf-8')], Track):
                 self.__songs[key] = trackdata[key.encode('utf-8')]
@@ -84,11 +93,15 @@ class TrackDB():
         if not loc:
             loc = self._loc
 
-        trackdata = shelve.open(loc, protocol=2)  # highest protocol
-        trackdata_keys = [key.decode('utf-8') for key in trackdata.iterkeys()]
+        try:
+            trackdata = shelve.open(loc, flag='c', protocol=2)  # highest protocol
+            trackdata["__dbversion"] = common.TRACKDB_VER
+        except Exception:
+            return
+        data_keys = [key.decode('utf-8') for key in trackdata.iterkeys()]
 
-        if self._added or len(self.__songs) > len(trackdata_keys):
-            diff_added = set(self.__songs) - set(trackdata_keys)
+        if self._added or len(self.__songs) > len(data_keys):
+            diff_added = set(self.__songs) - set(data_keys)
             diff_added.update(self._unsaved_updated_songs)
             for key in diff_added:
                 trackdata[key.encode('utf-8')] = self.__songs[key]  # save track object to database
@@ -96,7 +109,7 @@ class TrackDB():
             self._added = False
 
         if self._removed:
-            diff_removed = set(trackdata_keys) - set(self.__songs)
+            diff_removed = set(data_keys) - set(self.__songs) - set(["__dbversion"])
             for key in diff_removed:
                 del trackdata[key.encode('utf-8')]
             self._removed = False

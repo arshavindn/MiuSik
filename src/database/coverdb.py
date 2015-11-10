@@ -1,4 +1,5 @@
 from ast import literal_eval
+from src import common
 import shelve
 
 
@@ -6,13 +7,16 @@ class CoverDB():
     def __init__(self, loc):
         self._loc = loc
         self.__covers = {}
+        self.load_db()
         self._added = False
         self._removed = False
         self._unsaved_updated_covers = []
-        self.load_db()
 
     def get_covers_keys(self):
         return self.__covers.iterkeys()
+
+    def add_to_updated_covers(self, covers):
+        pass
 
     def add_cover(self, album, albumartist, cover):
         if (album, albumartist) not in self.get_covers_keys():
@@ -43,7 +47,16 @@ class CoverDB():
         if not loc:
             loc = self._loc
 
-        coverdata = shelve.open(loc, protocol=2)
+        try:
+            coverdata = shelve.open(loc, protocol=2)
+            if len(coverdata) == 0:
+                coverdata["__dbversion"] = common.COVERDB_VER
+            elif coverdata.get("__dbversion") != common.COVERDB_VER:
+                raise common.VersionError
+            else:
+                return
+        except Exception:
+            return
         # convert key in coverdata from string to tuple
         data_keys = [literal_eval(key.decode('utf-8')) for key in coverdata.iterkeys()]
         diff = set(data_keys) - set(self.__covers)
@@ -55,7 +68,11 @@ class CoverDB():
     def save_db(self, loc=None):
         if not loc:
             loc = self._loc
-        coverdata = shelve.open(loc, protocol=2)  # highest protocol
+        try:
+            coverdata = shelve.open(loc, protocol=2)  # highest protocol
+            coverdata["__dbversion"] = common.COVERDB_VER
+        except Exception:
+            return
         data_keys = [literal_eval(key.decode('utf-8')) for key in coverdata.iterkeys()]
 
         if self._added or len(self.__covers) > len(data_keys):
@@ -74,3 +91,5 @@ class CoverDB():
 
         coverdata.sync()
         coverdata.close()
+
+# end class CoverDB
