@@ -1,0 +1,32 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="/icons">
+
+        <file alias="artistinfo.png">main_layout_switch/artistinfo.png</file>
+        <file alias="lyrics.png">main_layout_switch/lyrics.png</file>
+        <file alias="playlist.png">main_layout_switch/playlist.png</file>
+
+        <file alias="next.png">play_control/next.png</file>
+        <file alias="pause.png">play_control/pause.png</file>
+        <file alias="play.png">play_control/play.png</file>
+        <file alias="previous.png">play_control/previous.png</file>
+        <file alias="stop.png">play_control/stop.png</file>
+        <file alias="shuffle.png">play_control/shuffle.png</file>
+        <file alias="repeat.png">play_control/repeat.png</file>
+        <file alias="volume-mute.png">play_control/volume-mute.png</file>
+        <file alias="volume-0.png">play_control/volume-0.png</file>
+        <file alias="volume-1.png">play_control/volume-1.png</file>
+        <file alias="volume-2.png">play_control/volume-2.png</file>
+        <file alias="volume-full.png">play_control/volume-full.png</file>
+
+        <file alias="add_tab.png">tab_bar/add_tab.png</file>
+
+        <file alias="add_file.png">toolbar/add_file.png</file>
+        <file alias="info.png">toolbar/info.png</file>
+        <file alias="load.png">toolbar/load.png</file>
+        <file alias="open_folder.png">toolbar/open_folder.png</file>
+        <file alias="save.png">toolbar/save.png</file>
+        <file alias="setting.png">toolbar/setting.png</file>
+
+    </qresource>
+</RCC>
