@@ -6,7 +6,7 @@ class PlaylistManager(object):
     def __init__(self):
     	self.playlists = []
 
-    def save_playlist(self, pl, overwrite=False):
+    def save_playlist(self, pl, loc, overwrite=False):
         """
             Saves a playlist
 
@@ -14,7 +14,13 @@ class PlaylistManager(object):
             @param overwrite: Set to [True] if you wish to overwrite a
                 playlist should it happen to already exist
         """
-        pass
+        name = pl._name
+        if overwrite or name not in self.playlists:
+			pl.save_self(loc)
+			if not name in self.playlists:
+				self.playlists.append(name)
+		else:
+			raise PlaylistExists
 
     def remove_playlist(self, playlist):
         """
@@ -38,3 +44,7 @@ class PlaylistManager(object):
             self.remove_playlist(old_name)
             playlist.name = new_name
             self.save_playlist(playlist)
+
+
+class PlaylistExists(Exception):
+	pass
