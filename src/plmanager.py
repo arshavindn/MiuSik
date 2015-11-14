@@ -6,30 +6,31 @@ import common
 class PlaylistManager(object):
     def __init__(self):
     	self.playlists = []
-        self.previous_session_playlist = {}
-        self.session_data_loc = get_appdata_dir() + '/' + 'session.miu'
-        self.load_session()
+        self.playlist_list = {}
+        self.playlist_list_loc = get_appdata_dir() + '/' + 'playlist_list.miu'
+        self.load_playlist_list()
 
-    def load_session(self):
-        # load playlists's name & loc of previous session from file
-        with open(self.session_data_loc, 'rb') as input:
-            self.previous_session_playlist = pickle.load(input)
+    def load_playlist_list(self):
+        # load playlists's name & loc from file
+        with open(self.playlist_list_loc, 'rb') as input:
+            self.playlist_list = pickle.load(input)
         # load playlist objects to memory
-        for loc in self.previous_session_playlist.itervalues():
+        for loc in self.playlist_list.itervalues():
             with open(loc, 'rb') as input:
                 playlist_object = pickle.load(input)
                 self.playlists.append(playlist_object)
 
-    def save_session(self):
-        # save playlists's name & loc of current session to file
-        current_session_playlist = {}
+    def save_playlist_list(self):
+        # save playlists's name & loc to file
+        playlist_list = {}
         for p in self.playlists:
-            current_session_playlist.update({p._name: p._loc})
-        with open(self.session_data_loc, 'wb') as output:
-            pickle.dump(current_session_playlist, output pickle.HIGHEST_PROTOCOL)
+            playlist_list.update({p._name: p._loc})
+        with open(self.playlist_list_loc, 'wb') as output:
+            pickle.dump(playlist_list, output pickle.HIGHEST_PROTOCOL)
 
     def add_playlist(self, name):
-    	pass
+    	playlist = Playlist(name)
+        self.playlists.append(playlist)
 
     def save_playlist(self, pl, loc, overwrite=False):
         """
@@ -48,14 +49,21 @@ class PlaylistManager(object):
 
     def remove_playlist(self, playlist):
         """
+            Removes a playlist from the manager
+        """
+        if playlist in self.playlists:
+            self.playlists.remove(playlist)
+
+    def remove_playlist_file(self, playlist):
+        """
             Removes a playlist from the manager, also
             physically deletes its
         """
         if playlist in self.playlists:
-            # try:
-            #     os.remove(playlist._loc)
-            # except OSError:
-            #     pass
+            try:
+                os.remove(playlist._loc)
+            except OSError:
+                pass
             self.playlists.remove(playlist)
 
     def rename_playlist(self, playlist, new_name):
