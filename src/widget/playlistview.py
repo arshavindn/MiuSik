@@ -1,7 +1,21 @@
-# You will have to write your own class for the QTabBar. The plus button can be added by using absolute positioning.
-
-# I have some code here for PySide; it should give you the basic idea.
 from PyQt4 import QtGui, QtCore
+
+
+class PlaylistTable(QtGui.QWidget):
+    def __init__(self):
+        super(PlaylistTable, self).__init__()
+        self.playlistTable = QtGui.QTableWidget(self)
+        self.playlistTable.setFrameShape(QtGui.QFrame.NoFrame)
+        self.playlistTable.setFrameShadow(QtGui.QFrame.Sunken)
+        self.playlistTable.setLineWidth(0)
+        self.playlistTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
+        self.playlistTable.setVerticalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
+        self.playlistTable.setHorizontalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
+        self.playlistTable.setShowGrid(True)
+        self.playlistTable.setGridStyle(QtCore.Qt.SolidLine)
+        self.playlistTable.setWordWrap(True)
+        self.playlistTable.setCornerButtonEnabled(True)
+        self.playlistTable.verticalHeader().setVisible(False)
 
 
 class TabBarPlus(QtGui.QTabBar):
@@ -31,7 +45,7 @@ class TabBarPlus(QtGui.QTabBar):
 
     def resizeEvent(self, event):
         """Resize the widget and make sure the plus button is in the correct location."""
-        super().resizeEvent(event)
+        super(TabBarPlus, self).resizeEvent(event)
 
         self.movePlusButton()
     # end resizeEvent
@@ -40,7 +54,7 @@ class TabBarPlus(QtGui.QTabBar):
         """This virtual handler is called whenever the tab layout changes.
         If anything changes make sure the plus button is in the correct location.
         """
-        super().tabLayoutChange()
+        super(TabBarPlus, self).tabLayoutChange()
 
         self.movePlusButton()
     # end tabLayoutChange
@@ -62,28 +76,47 @@ class TabBarPlus(QtGui.QTabBar):
     # end movePlusButton
 # end class MyClass
 
+
 class CustomTabWidget(QtGui.QTabWidget):
     """Tab Widget that that can have new tabs easily added to it."""
 
     def __init__(self, parent=None):
         super(CustomTabWidget, self).__init__(parent)
+        # QtGui.QTabWidget.__init__(self, parent)
 
         # Tab Bar
-        self.tab = TabBarPlus()
+        self.tab = QtGui.QTabBar()
+        # self.tab = TabBarPlus()
         self.setTabBar(self.tab)
 
         # Properties
         self.setMovable(True)
         self.setTabsClosable(True)
 
-        # Signals
-        # self.tab.plusClicked.connect(self.addTab)
-        self.connect(self.tab.plusButton, QtCore.SIGNAL('clicked()'), self.addTab)
-        # self.tab.tabMoved.connect(self.moveTab)
-        self.tabCloseRequested.connect(self.removeTab)
-    # end Constructor
-# end class CustomTabWidget
+        self.plusButton = QtGui.QToolButton(self.tab)
+        self.plusButton.setText("+")
+        # self.plusButton.setMaximumSize(20, 20) # Small Fixed size
+        self.plusButton.setMinimumSize(24, 24)
+        # self.plusButton.setGeometry(0, 0, 30, 22)
+        self.setCornerWidget(self.plusButton)
 
+        # Signals
+        self.connect(self.plusButton, QtCore.SIGNAL('clicked()'), self.addTab)
+        # self.tab.plusClicked.connect(self.addTab)
+        self.tab.tabMoved.connect(self.tab.moveTab)
+        self.tabCloseRequested.connect(self.removeTab)
+
+    def addTab(self):
+        string = QtCore.QString.fromUtf8("Playlist")
+        tab = PlaylistTable()
+        super(CustomTabWidget, self).addTab(tab, string)
+        # self.tab.movePlusButton
+        sizeHint = self.plusButton.sizeHint()
+        width = sizeHint.width()
+        height = sizeHint.height()
+        print (width, height)
+        # plusButton_geo = self.plusButton.geometry()
+        # print plusButton_geo
 
 class AppDemo(QtGui.QMainWindow):
     def __init__(self):
@@ -93,14 +126,11 @@ class AppDemo(QtGui.QMainWindow):
         self.horizontalLayout.setContentsMargins(0, -1, 0, -1)
 
         self.playlist_manager = CustomTabWidget(self.centralwidget)
-        #self.tabbar = TabBarPlus(self.centralwidget)
-
+        # self.playlist_manager = QtGui.QTabWidget(self.centralwidget)
         self.horizontalLayout.addWidget(self.playlist_manager)
-        #self.horizontalLayout.addWidget(self.tabbar)
-        #string = QtCore.QString('Ha')
-        #self.tabbar.addTab(string)
 
         self.playlist_manager.addTab()
+        # self.playlist_manager.addTab()
         self.setCentralWidget(self.centralwidget)
 
         self.show()
@@ -113,8 +143,8 @@ def main():
 
     w = AppDemo()
     w.setWindowTitle('AppDemo')
-    with open('style.qss', 'r') as style:
-        w.setStyleSheet(style)
+    style = open('style.qss').read()
+    w.setStyleSheet(style)
     w.show()
 
     sys.exit(app.exec_())

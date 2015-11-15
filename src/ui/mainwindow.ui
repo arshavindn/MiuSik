@@ -452,6 +452,12 @@ QTabWidget::tab-bar {
            <iconset resource="../../icons/resources.qrc">
             <normaloff>:/icons/lyrics.png</normaloff>:/icons/lyrics.png</iconset>
           </property>
+          <property name="iconSize">
+           <size>
+            <width>16</width>
+            <height>16</height>
+           </size>
+          </property>
          </widget>
         </item>
         <item>

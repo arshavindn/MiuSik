@@ -1,0 +1,20 @@
+QTabBar::tear {
+    image: "tear_indicator.png";
+}
+
+QTabBar::scroller { /* the width of the scroll buttons */
+    width: 20px;
+}
+
+QTabBar QToolButton { /* the scroll buttons are tool buttons */
+    /*border-image: url(scrollbutton.png) 2;*/
+    border-width: 2px;
+}
+
+QTabBar QToolButton::right-arrow { /* the arrow mark in the tool buttons */
+    /*image: url(rightarrow.png);*/
+}
+
+QTabBar QToolButton::left-arrow {
+    /*image: url(leftarrow.png);*/
+}

@@ -1,7 +1,9 @@
-/*QTableView::item:focus {
-    background-color: transparent;
-}*/
 
-QPushButton {
-    outline: none;
+QTabWidget::pane {
+    border-top: 1px solid #c4c4c4;
+    top: -1px;
+}
+
+QTabWidget::tab-bar {
+    left: 5px;
 }

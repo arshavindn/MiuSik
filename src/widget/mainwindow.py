@@ -7,6 +7,7 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt4 import QtCore, QtGui
+# from src.widget import playlistvie
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -34,6 +35,10 @@ class Ui_main_window(object):
         self.verticalLayout_2 = QtGui.QVBoxLayout(self.centralwidget)
         self.verticalLayout_2.setContentsMargins(0, 6, 0, 6)
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
+
+        ###########
+        # main menu
+        ###########
         self.main_menu = QtGui.QHBoxLayout()
         self.main_menu.setObjectName(_fromUtf8("main_menu"))
         spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
@@ -54,6 +59,10 @@ class Ui_main_window(object):
         self.lineUnderMainMenu.setFrameShadow(QtGui.QFrame.Sunken)
         self.lineUnderMainMenu.setObjectName(_fromUtf8("lineUnderMainMenu"))
         self.verticalLayout_2.addWidget(self.lineUnderMainMenu)
+
+        #########
+        # toolbar
+        #########
         self.toolbar = QtGui.QHBoxLayout()
         self.toolbar.setObjectName(_fromUtf8("toolbar"))
         spacerItem2 = QtGui.QSpacerItem(5, 20, QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Minimum)
@@ -107,10 +116,19 @@ class Ui_main_window(object):
         spacerItem5 = QtGui.QSpacerItem(5, 20, QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Minimum)
         self.toolbar.addItem(spacerItem5)
         self.verticalLayout_2.addLayout(self.toolbar)
+
+
+        ###########
+        # main area
+        ###########
         self.main_area = QtGui.QVBoxLayout()
         self.main_area.setObjectName(_fromUtf8("main_area"))
+
+        # main content
         self.main_content = QtGui.QHBoxLayout()
         self.main_content.setObjectName(_fromUtf8("main_content"))
+
+        # playlist frame
         self.playlists_frame = QtGui.QFrame(self.centralwidget)
         self.playlists_frame.setFrameShape(QtGui.QFrame.NoFrame)
         self.playlists_frame.setFrameShadow(QtGui.QFrame.Plain)
@@ -121,6 +139,7 @@ class Ui_main_window(object):
         self.horizontalLayout.setMargin(0)
         self.horizontalLayout.setSpacing(0)
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
+
         self.playlists_tabs = QtGui.QTabWidget(self.playlists_frame)
         self.playlists_tabs.setEnabled(True)
         self.playlists_tabs.setStyleSheet(_fromUtf8("QTabWidget::pane {\n"
@@ -137,6 +156,7 @@ class Ui_main_window(object):
         self.playlists_tabs.setTabsClosable(True)
         self.playlists_tabs.setMovable(True)
         self.playlists_tabs.setObjectName(_fromUtf8("playlists_tabs"))
+
         self.tab_3 = QtGui.QWidget()
         self.tab_3.setObjectName(_fromUtf8("tab_3"))
         self.verticalLayout_5 = QtGui.QVBoxLayout(self.tab_3)
@@ -167,6 +187,8 @@ class Ui_main_window(object):
         self.horizontalLayout.addWidget(self.playlists_tabs)
         self.main_content.addWidget(self.playlists_frame)
         self.main_area.addLayout(self.main_content)
+
+        # choose layout buttons
         self.choose_layout_buttons = QtGui.QHBoxLayout()
         self.choose_layout_buttons.setObjectName(_fromUtf8("choose_layout_buttons"))
         spacerItem6 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
@@ -215,6 +237,10 @@ class Ui_main_window(object):
         self.lineUnderMainArea.setFrameShadow(QtGui.QFrame.Sunken)
         self.lineUnderMainArea.setObjectName(_fromUtf8("lineUnderMainArea"))
         self.verticalLayout_2.addWidget(self.lineUnderMainArea)
+
+        ##############
+        # control area
+        ##############
         self.control_area = QtGui.QHBoxLayout()
         self.control_area.setSpacing(0)
         self.control_area.setObjectName(_fromUtf8("control_area"))
@@ -223,6 +249,8 @@ class Ui_main_window(object):
         self.main_control = QtGui.QVBoxLayout()
         self.main_control.setSpacing(0)
         self.main_control.setObjectName(_fromUtf8("main_control"))
+
+        # controler
         self.controler = QtGui.QHBoxLayout()
         self.controler.setObjectName(_fromUtf8("controler"))
         self.controler_buttons = QtGui.QVBoxLayout()
@@ -311,6 +339,8 @@ class Ui_main_window(object):
         self.controler.addLayout(self.controler_buttons)
         spacerItem9 = QtGui.QSpacerItem(25, 5, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         self.controler.addItem(spacerItem9)
+
+        # playing song info
         self.playing_song_info = QtGui.QVBoxLayout()
         self.playing_song_info.setSpacing(0)
         self.playing_song_info.setObjectName(_fromUtf8("playing_song_info"))
@@ -340,6 +370,8 @@ class Ui_main_window(object):
         self.playing_song_info.addWidget(self.artist, QtCore.Qt.AlignRight)
         self.controler.addLayout(self.playing_song_info)
         self.main_control.addLayout(self.controler)
+
+        # slider
         self.slider_area = QtGui.QHBoxLayout()
         self.slider_area.setSpacing(4)
         self.slider_area.setObjectName(_fromUtf8("slider_area"))
@@ -382,6 +414,8 @@ class Ui_main_window(object):
         self.control_area.addLayout(self.main_control)
         spacerItem10 = QtGui.QSpacerItem(20, 5, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         self.control_area.addItem(spacerItem10)
+
+        # cover
         self.cover = QtGui.QLabel(self.centralwidget)
         self.cover.setEnabled(True)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
@@ -422,10 +456,16 @@ class Ui_main_window(object):
         self.playlists_tabs.setTabText(self.playlists_tabs.indexOf(self.tab_4), _translate("main_window", "Playlist 2", None))
         self.position.setText(_translate("main_window", "00:00", None))
 
+    def setup_playlist_view(self, main_window):
+        self.playlists_tabs = playlistview.CustomTabWidget(self.playlists_frame)
+        pass
+
+
+
 from PyQt4 import phonon
 import resources_rc
 
-if __name__ == "__main__":
+def main():
     import sys
     app = QtGui.QApplication(sys.argv)
     MainWindow = QtGui.QMainWindow()
@@ -433,3 +473,6 @@ if __name__ == "__main__":
     ui.setupUi(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())
+
+if __name__ == "__main__":
+    main()
