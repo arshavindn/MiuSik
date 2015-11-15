@@ -12,8 +12,11 @@ class CoverDB():
         self._removed = False
         self._unsaved_updated_covers = []
 
+    def __len__(self):
+        return len(self.__covers)
+
     def get_covers_keys(self):
-        return self.__covers.iterkeys()
+        return self.__covers.keys()
 
     def add_to_updated_covers(self, covers):
         pass
@@ -53,15 +56,14 @@ class CoverDB():
                 coverdata["__dbversion"] = common.COVERDB_VER
             elif coverdata.get("__dbversion") != common.COVERDB_VER:
                 raise common.VersionError
-            else:
-                return
         except Exception:
             return
         # convert key in coverdata from string to tuple
-        data_keys = [literal_eval(key.decode('utf-8')) for key in coverdata.iterkeys()]
+        data_keys = [literal_eval(key.decode('utf-8'))
+                     for key in coverdata.iterkeys() if key != "__dbversion"]
         diff = set(data_keys) - set(self.__covers)
         for key in diff:
-            self.__covers[key] = coverdata[str(key).encode('utf-8')]
+            self.__covers[key] = coverdata[unicode(key).encode('utf-8')]
 
         coverdata.close()
 
@@ -73,13 +75,14 @@ class CoverDB():
             coverdata["__dbversion"] = common.COVERDB_VER
         except Exception:
             return
-        data_keys = [literal_eval(key.decode('utf-8')) for key in coverdata.iterkeys()]
+        data_keys = [literal_eval(key.decode('utf-8'))
+                     for key in coverdata.iterkeys() if key != "__dbversion"]
 
         if self._added or len(self.__covers) > len(data_keys):
             diff_added = set(self.__covers) - set(data_keys)
             diff_added.update(self._unsaved_updated_covers)
             for key in diff_added:
-                coverdata[str(key).encode('utf-8')] = self.__covers[key]
+                coverdata[unicode(key).encode('utf-8')] = self.__covers[key]
             self._unsaved_updated_albums = []
             self._added = False
 

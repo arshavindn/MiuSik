@@ -70,11 +70,10 @@ class TrackDB():
                 trackdata["__dbversion"] = common.TRACKDB_VER
             elif trackdata.get("__dbversion") != common.TRACKDB_VER:
                 raise common.VersionError
-            else:
-                return
         except Exception:
             return
-        data_keys = [key.decode('utf-8') for key in trackdata.iterkeys()]
+        data_keys = [key.decode('utf-8')
+                     for key in trackdata.iterkeys() if key != "__dbversion"]
         if merge:
             diff = set(data_keys) - set(self.__songs)
         else:
@@ -98,7 +97,8 @@ class TrackDB():
             trackdata["__dbversion"] = common.TRACKDB_VER
         except Exception:
             return
-        data_keys = [key.decode('utf-8') for key in trackdata.iterkeys()]
+        data_keys = [key.decode('utf-8')
+                     for key in trackdata.iterkeys() if key != "__dbversion"]
 
         if self._added or len(self.__songs) > len(data_keys):
             diff_added = set(self.__songs) - set(data_keys)

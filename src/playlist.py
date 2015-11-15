@@ -26,6 +26,7 @@ class Playlist():
 
     def set_loc(self, loc):
         self._loc = loc
+        self.load_self()
 
     def get_albums_dict(self):
         return self.__albums
@@ -44,6 +45,12 @@ class Playlist():
 
     def get_album_from_info(self, album, albumartist):
         return self.__albums.get((album, albumartist))
+
+    def get_loc_list(self):
+        loc_list = []
+        for album in self.get_albums():
+            loc_list.extend(album.get_songs())
+        return loc_list
 
     def add_track(self, loc, trackdb, coverdb):
         track = trackdb.get_track_by_loc(loc)

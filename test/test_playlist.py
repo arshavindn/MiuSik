@@ -11,12 +11,18 @@ coverdata = coverdb.CoverDB('D:/Cloud/Dropbox/Programming/Code/py/Miusik/test/da
 
 
 def test1():
+    # trackdata = trackdb.TrackDB('D:/Cloud/Dropbox/Programming/Code/py/Miusik/test/data/trackdb')
+    # coverdata = coverdb.CoverDB('D:/Cloud/Dropbox/Programming/Code/py/Miusik/test/data/coverdb')
+    # print len(trackdata), trackdata.get_songs()
+    # print len(coverdata), coverdata.get_covers_keys()
     my_playlist = playlist.Playlist('Playlist 1')
     playlist_loc = "D:/Cloud/Dropbox/Programming/Code/py/Miusik/test/data/Playlist 1.db"
     my_playlist.set_loc(playlist_loc)
     for song in songs:
-        print song
+        # print song
         my_playlist.add_track(song, trackdata, coverdata)
+
+    print my_playlist.get_loc_list()
 
     my_playlist.save_self()
     trackdata.save_db()
