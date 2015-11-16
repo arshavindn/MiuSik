@@ -1,4 +1,5 @@
-from test import test_playlist, test_albumdb, test_track, test_metadata, test_trackdb
+from test import (test_playlist, test_albumdb, test_track,
+                  test_metadata, test_trackdb, test_playlistview)
 
 
 def testMetadata():
@@ -20,7 +21,12 @@ def testAlbumDB():
 def testPlaylist():
     test_playlist.test1()
 
+
+def testPlaylistview():
+    test_playlistview.main_appdemo()
+
 if __name__ == '__main__':
     # testTrack()
     # testMetadata()
-    testPlaylist()
+    testPlaylistview()
+

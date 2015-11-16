@@ -1,21 +1,75 @@
 from PyQt4 import QtGui, QtCore
+from src.metadata.tags import tag_data
 
 
-class PlaylistTable(QtGui.QWidget):
+class PlaylistTable(QtGui.QTableWidget):
+    all_header = tag_data.keys()
+    shown_header = ['title', 'album', 'artist', '__length']
+
     def __init__(self):
         super(PlaylistTable, self).__init__()
-        self.playlistTable = QtGui.QTableWidget(self)
-        self.playlistTable.setFrameShape(QtGui.QFrame.NoFrame)
-        self.playlistTable.setFrameShadow(QtGui.QFrame.Sunken)
-        self.playlistTable.setLineWidth(0)
-        self.playlistTable.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
-        self.playlistTable.setVerticalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
-        self.playlistTable.setHorizontalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
-        self.playlistTable.setShowGrid(True)
-        self.playlistTable.setGridStyle(QtCore.Qt.SolidLine)
-        self.playlistTable.setWordWrap(True)
-        self.playlistTable.setCornerButtonEnabled(True)
-        self.playlistTable.verticalHeader().setVisible(False)
+        self.setFrameShape(QtGui.QFrame.NoFrame)
+        self.setFrameShadow(QtGui.QFrame.Sunken)
+        self.setLineWidth(0)
+        self.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
+        self.setVerticalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
+        self.setHorizontalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
+        self.setShowGrid(True)
+        self.setGridStyle(QtCore.Qt.SolidLine)
+        self.setWordWrap(False)
+        self.verticalHeader().setVisible(False)
+        self.horizontalHeader().setMovable(True)
+        self.horizontalHeader().setDragEnabled(True)
+        self.horizontalHeader().setDragDropMode(QtGui.QAbstractItemView.InternalMove)
+        self.setSortingEnabled(True)
+        self.setRowCount(0)
+        self.set_headers()
+
+    def set_headers(self):
+        self.setColumnCount(len(self.all_header) + 1)
+        for col in range(self.columnCount()):
+            if col == 0:
+                self.setHorizontalHeaderItem(col, QtGui.QTableWidgetItem(QtCore.QString('Playing')))
+            else:
+                if self.all_header[col-1] not in ('part', '__rating'):
+                    item = QtGui.QTableWidgetItem(QtCore.QString(tag_data[self.all_header[col-1]].name))
+                    self.setHorizontalHeaderItem(col, item)
+                if self.all_header[col-1] not in self.shown_header:
+                    self.hideColumn(col)
+
+
+class QTabBar(QtGui.QTabBar):
+
+    """QTabBar with double click signal and tab rename behavior."""
+
+    def __init__(self, parent=None):
+        super(QTabBar, self).__init__(parent)
+
+    tabDoubleClicked = QtCore.pyqtSignal(int)
+
+    def mouseDoubleClickEvent(self, event):
+        tab_index = self.tabAt(event.pos())
+        self.tabDoubleClicked.emit(tab_index)
+        self.start_rename(tab_index)
+
+    def start_rename(self, tab_index):
+        self.__edited_tab = tab_index
+        rect = self.tabRect(tab_index)
+        top_margin = 3
+        left_margin = 6
+        self.__edit = QtGui.QLineEdit(self)
+        self.__edit.show()
+        self.__edit.move(rect.left() + left_margin, rect.top() + top_margin)
+        self.__edit.resize(rect.width() - 2 * left_margin, rect.height() - 2 * top_margin)
+        self.__edit.setText(self.tabText(tab_index))
+        self.__edit.selectAll()
+        self.__edit.setFocus()
+        self.__edit.editingFinished.connect(self.finish_rename)
+
+    @QtCore.pyqtSlot()
+    def finish_rename(self):
+        self.setTabText(self.__edited_tab, self.__edit.text())
+        self.__edit.deleteLater()
 
 
 class TabBarPlus(QtGui.QTabBar):
@@ -27,8 +81,8 @@ class TabBarPlus(QtGui.QTabBar):
         super(TabBarPlus, self).__init__()
 
         # Plus Button
-        self.plusButton = QtGui.QPushButton("+")
-        self.plusButton.setParent(self)
+        self.plusButton = QtGui.QToolButton(self)
+        self.plusButton.setText("+")
         self.plusButton.setMaximumSize(20, 20) # Small Fixed size
         self.plusButton.setMinimumSize(20, 20) # Small Fixed size
         # self.plusButton.clicked.connect(self.plusClicked.emit)
@@ -40,7 +94,7 @@ class TabBarPlus(QtGui.QTabBar):
         sizeHint = QtGui.QTabBar.sizeHint(self)
         width = sizeHint.width()
         height = sizeHint.height()
-        return QtCore.QSize(width+25, height)
+        return QtCore.QSize(width+25, height+10)
     # end tabSizeHint
 
     def resizeEvent(self, event):
@@ -85,8 +139,8 @@ class CustomTabWidget(QtGui.QTabWidget):
         # QtGui.QTabWidget.__init__(self, parent)
 
         # Tab Bar
-        self.tab = QtGui.QTabBar()
-        # self.tab = TabBarPlus()
+        # self.tab = QtGui.QTabBar()
+        self.tab = QTabBar()
         self.setTabBar(self.tab)
 
         # Properties
@@ -95,9 +149,8 @@ class CustomTabWidget(QtGui.QTabWidget):
 
         self.plusButton = QtGui.QToolButton(self.tab)
         self.plusButton.setText("+")
-        # self.plusButton.setMaximumSize(20, 20) # Small Fixed size
-        self.plusButton.setMinimumSize(24, 24)
-        # self.plusButton.setGeometry(0, 0, 30, 22)
+        self.plusButton.setMaximumSize(20, 20) # Small Fixed size
+        self.plusButton.setMinimumSize(20, 20)
         self.setCornerWidget(self.plusButton)
 
         # Signals
@@ -105,16 +158,18 @@ class CustomTabWidget(QtGui.QTabWidget):
         # self.tab.plusClicked.connect(self.addTab)
         self.tab.tabMoved.connect(self.tab.moveTab)
         self.tabCloseRequested.connect(self.removeTab)
+        self.tabBar().tabDoubleClicked.connect(self.tabBarDoubleClicked)
+
+    tabBarDoubleClicked = QtCore.pyqtSignal(int)
 
     def addTab(self):
         string = QtCore.QString.fromUtf8("Playlist")
         tab = PlaylistTable()
         super(CustomTabWidget, self).addTab(tab, string)
         # self.tab.movePlusButton
-        sizeHint = self.plusButton.sizeHint()
-        width = sizeHint.width()
-        height = sizeHint.height()
-        print (width, height)
+        # print self.tab.size()
+        # print self.tab.sizeHint()
+        # print self.tab.tabSizeHint(0)
         # plusButton_geo = self.plusButton.geometry()
         # print plusButton_geo
 
@@ -130,24 +185,7 @@ class AppDemo(QtGui.QMainWindow):
         self.horizontalLayout.addWidget(self.playlist_manager)
 
         self.playlist_manager.addTab()
-        # self.playlist_manager.addTab()
         self.setCentralWidget(self.centralwidget)
 
         self.show()
 # end class AppDemo
-
-
-def main():
-    import sys
-    app = QtGui.QApplication(sys.argv)
-
-    w = AppDemo()
-    w.setWindowTitle('AppDemo')
-    style = open('style.qss').read()
-    w.setStyleSheet(style)
-    w.show()
-
-    sys.exit(app.exec_())
-
-if __name__ == '__main__':
-    main()

@@ -10,8 +10,6 @@ folder = u"D:/Drive E/Vietnam"
 songs = [folder + '/' + song for song in os.listdir(folder)]
 loc3 = songs[7]
 
-print len(loc3)
-
 
 def test1():
     song = track.Track(loc0)
