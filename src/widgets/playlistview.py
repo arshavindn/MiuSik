@@ -31,11 +31,22 @@ class PlaylistTable(QtGui.QTableWidget):
             if col == 0:
                 self.setHorizontalHeaderItem(col, QtGui.QTableWidgetItem(QtCore.QString('Playing')))
             else:
-                if self.all_header[col-1] not in ('part', '__rating'):
+                if tag_data.get(self.all_header[col-1]):
                     item = QtGui.QTableWidgetItem(QtCore.QString(tag_data[self.all_header[col-1]].name))
                     self.setHorizontalHeaderItem(col, item)
                 if self.all_header[col-1] not in self.shown_header:
                     self.hideColumn(col)
+
+class TabNameLineEdit(QtGui.QLineEdit):
+    editingFinished = QtCore.pyqtSignal()
+
+    def __init__(self, parent=None):
+        super(TabNameLineEdit, self).__init__(parent)
+
+    def keyPressEvent(self, e):
+        if (e.key() == QtCore.Qt.Key_Escape or \
+                e.key() == QtCore.Qt.Key_Return) and self.hasFocus:  # lol, Key_Return means press Enter
+            self.editingFinished.emit()
 
 
 class QTabBar(QtGui.QTabBar):
@@ -57,8 +68,9 @@ class QTabBar(QtGui.QTabBar):
         rect = self.tabRect(tab_index)
         top_margin = 3
         left_margin = 6
-        self.__edit = QtGui.QLineEdit(self)
+        self.__edit = TabNameLineEdit(self)
         self.__edit.show()
+        print self.__edit
         self.__edit.move(rect.left() + left_margin, rect.top() + top_margin)
         self.__edit.resize(rect.width() - 2 * left_margin, rect.height() - 2 * top_margin)
         self.__edit.setText(self.tabText(tab_index))
@@ -68,8 +80,11 @@ class QTabBar(QtGui.QTabBar):
 
     @QtCore.pyqtSlot()
     def finish_rename(self):
+        self.__edit = self.sender()
         self.setTabText(self.__edited_tab, self.__edit.text())
+        self.__edit.hide()
         self.__edit.deleteLater()
+        print self.__edit
 
 
 class TabBarPlus(QtGui.QTabBar):
@@ -154,7 +169,8 @@ class CustomTabWidget(QtGui.QTabWidget):
         self.setCornerWidget(self.plusButton)
 
         # Signals
-        self.connect(self.plusButton, QtCore.SIGNAL('clicked()'), self.addTab)
+        # self.connect(self.plusButton, QtCore.SIGNAL('clicked()'),
+        #             lambda tab_name="Playlist": self.addTab(tab_name))
         # self.tab.plusClicked.connect(self.addTab)
         self.tab.tabMoved.connect(self.tab.moveTab)
         self.tabCloseRequested.connect(self.removeTab)
@@ -162,16 +178,12 @@ class CustomTabWidget(QtGui.QTabWidget):
 
     tabBarDoubleClicked = QtCore.pyqtSignal(int)
 
-    def addTab(self):
-        string = QtCore.QString.fromUtf8("Playlist")
+    def addTab(self, tab_name):
+        string = QtCore.QString.fromUtf8(tab_name)
         tab = PlaylistTable()
-        super(CustomTabWidget, self).addTab(tab, string)
-        # self.tab.movePlusButton
-        # print self.tab.size()
-        # print self.tab.sizeHint()
-        # print self.tab.tabSizeHint(0)
-        # plusButton_geo = self.plusButton.geometry()
-        # print plusButton_geo
+        index = super(CustomTabWidget, self).addTab(tab, string)
+        self.setCurrentIndex(index)
+        return index
 
 class AppDemo(QtGui.QMainWindow):
     def __init__(self):

@@ -7,7 +7,7 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt4 import QtCore, QtGui
-# from src.widget import playlistvie
+from src.widgets import playlistview
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -28,7 +28,7 @@ class Ui_main_window(object):
         main_window.setObjectName(_fromUtf8("main_window"))
         main_window.resize(582, 521)
         main_window.setToolButtonStyle(QtCore.Qt.ToolButtonIconOnly)
-        main_window.setAnimated(False)
+        main_window.setAnimated(True)
         main_window.setTabShape(QtGui.QTabWidget.Triangular)
         self.centralwidget = QtGui.QWidget(main_window)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
@@ -139,52 +139,6 @@ class Ui_main_window(object):
         self.horizontalLayout.setMargin(0)
         self.horizontalLayout.setSpacing(0)
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
-
-        self.playlists_tabs = QtGui.QTabWidget(self.playlists_frame)
-        self.playlists_tabs.setEnabled(True)
-        self.playlists_tabs.setStyleSheet(_fromUtf8("QTabWidget::pane {\n"
-"    border-top: 1px solid #c4c4c4;\n"
-"    top:-1px;\n"
-"}\n"
-"\n"
-"QTabWidget::tab-bar {\n"
-"    left: 5px;\n"
-"}"))
-        self.playlists_tabs.setTabPosition(QtGui.QTabWidget.North)
-        self.playlists_tabs.setTabShape(QtGui.QTabWidget.Rounded)
-        self.playlists_tabs.setUsesScrollButtons(True)
-        self.playlists_tabs.setTabsClosable(True)
-        self.playlists_tabs.setMovable(True)
-        self.playlists_tabs.setObjectName(_fromUtf8("playlists_tabs"))
-
-        self.tab_3 = QtGui.QWidget()
-        self.tab_3.setObjectName(_fromUtf8("tab_3"))
-        self.verticalLayout_5 = QtGui.QVBoxLayout(self.tab_3)
-        self.verticalLayout_5.setMargin(0)
-        self.verticalLayout_5.setSpacing(0)
-        self.verticalLayout_5.setObjectName(_fromUtf8("verticalLayout_5"))
-        self.tableWidget_2 = QtGui.QTableWidget(self.tab_3)
-        self.tableWidget_2.setFrameShape(QtGui.QFrame.NoFrame)
-        self.tableWidget_2.setFrameShadow(QtGui.QFrame.Sunken)
-        self.tableWidget_2.setLineWidth(0)
-        self.tableWidget_2.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
-        self.tableWidget_2.setVerticalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
-        self.tableWidget_2.setHorizontalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
-        self.tableWidget_2.setShowGrid(True)
-        self.tableWidget_2.setGridStyle(QtCore.Qt.SolidLine)
-        self.tableWidget_2.setWordWrap(False)
-        self.tableWidget_2.setCornerButtonEnabled(False)
-        self.tableWidget_2.setRowCount(0)
-        self.tableWidget_2.setObjectName(_fromUtf8("tableWidget_2"))
-        self.tableWidget_2.setColumnCount(0)
-        self.tableWidget_2.verticalHeader().setVisible(False)
-        self.tableWidget_2.verticalHeader().setStretchLastSection(False)
-        self.verticalLayout_5.addWidget(self.tableWidget_2)
-        self.playlists_tabs.addTab(self.tab_3, _fromUtf8(""))
-        self.tab_4 = QtGui.QWidget()
-        self.tab_4.setObjectName(_fromUtf8("tab_4"))
-        self.playlists_tabs.addTab(self.tab_4, _fromUtf8(""))
-        self.horizontalLayout.addWidget(self.playlists_tabs)
         self.main_content.addWidget(self.playlists_frame)
         self.main_area.addLayout(self.main_content)
 
@@ -436,8 +390,9 @@ class Ui_main_window(object):
         self.verticalLayout_2.addLayout(self.control_area)
         main_window.setCentralWidget(self.centralwidget)
 
+        self.setup_playlist_view(main_window)
         self.retranslateUi(main_window)
-        self.playlists_tabs.setCurrentIndex(0)
+        # self.playlists_tabs.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(main_window)
 
     def retranslateUi(self, main_window):
@@ -451,14 +406,14 @@ class Ui_main_window(object):
         self.app_setting_button.setText(_translate("main_window", "Setting", None))
         self.app_info_button.setText(_translate("main_window", "...", None))
         self.search_box.setPlaceholderText(_translate("main_window", "Search", None))
-        self.tableWidget_2.setSortingEnabled(True)
-        self.playlists_tabs.setTabText(self.playlists_tabs.indexOf(self.tab_3), _translate("main_window", "Playlist 1", None))
-        self.playlists_tabs.setTabText(self.playlists_tabs.indexOf(self.tab_4), _translate("main_window", "Playlist 2", None))
+        # self.tableWidget_2.setSortingEnabled(True)
+        # self.playlists_tabs.setTabText(self.playlists_tabs.indexOf(self.tab_3), _translate("main_window", "Playlist 1", None))
+        # self.playlists_tabs.setTabText(self.playlists_tabs.indexOf(self.tab_4), _translate("main_window", "Playlist 2", None))
         self.position.setText(_translate("main_window", "00:00", None))
 
     def setup_playlist_view(self, main_window):
         self.playlists_tabs = playlistview.CustomTabWidget(self.playlists_frame)
-        pass
+        self.horizontalLayout.addWidget(self.playlists_tabs)
 
 
 
@@ -473,6 +428,3 @@ def main():
     ui.setupUi(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())
-
-if __name__ == "__main__":
-    main()

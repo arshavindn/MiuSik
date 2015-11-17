@@ -1,5 +1,6 @@
 from test import (test_playlist, test_albumdb, test_track,
-                  test_metadata, test_trackdb, test_playlistview)
+                  test_metadata, test_trackdb, test_playlistview,
+                  test_mainwindow)
 
 
 def testMetadata():
@@ -28,5 +29,4 @@ def testPlaylistview():
 if __name__ == '__main__':
     # testTrack()
     # testMetadata()
-    testPlaylistview()
-
+    test_mainwindow.test()
