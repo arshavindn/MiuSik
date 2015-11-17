@@ -6,8 +6,8 @@ def test1():
 	my_playlist_manager = plmanager.PlaylistManager()
 	# test add playlist
 	print "* Test add playlist"
-	my_playlist_manager.add_playlist('Playlist1', 'I:/Playlist1.pl')
-	my_playlist_manager.add_playlist('Playlist2', 'I:/Playlist2.pl')
+	my_playlist_manager.add_playlist('Playlist1', 'C:/Users/Luu/Playlist1.pl')
+	my_playlist_manager.add_playlist('Playlist2', 'C:/Users/Luu/Playlist2.pl')
 	for p in my_playlist_manager.playlists:
 		print p._name
 	# test delete playlist
@@ -20,7 +20,7 @@ def test1():
 	# test save playlist list
 	print "* Test save playlist list"
 	my_playlist_manager.save_playlist_list()
-	print os.listdir('I:/')
+	print os.listdir('C:/Users/Luu/')
 	# test rename playlist
 	print "* Test rename playlist"
 	for p in my_playlist_manager.playlists:
@@ -30,6 +30,6 @@ def test1():
 		print p._name
 	# test add playlist from location
 	print "* Test add playlist from location"
-	my_playlist_manager.add_playlist_from_location('I:/Playlist3.pl')
+	my_playlist_manager.add_playlist_from_location('C:/Users/Luu/Playlist3.pl')
 	for p in my_playlist_manager.playlists:
 		print p._name

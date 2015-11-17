@@ -26,7 +26,7 @@ class Playlist():
 
     def set_loc(self, loc):
         self._loc = loc
-        self.load_self()
+        # self.load_self()
 
     def get_albums_dict(self):
         return self.__albums

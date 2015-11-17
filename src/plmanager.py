@@ -35,7 +35,7 @@ class PlaylistManager(object):
             pickle.dump(playlist_list, output, pickle.HIGHEST_PROTOCOL)
 
     def add_playlist(self, name, loc):
-        if not os.path.isfile(loc):
+        if not os.path.isfile(loc) and name not in [p._name for p in self.playlists]:
             playlist = Playlist(name)
             playlist.set_loc(loc)
             self.playlists.append(playlist)
@@ -43,10 +43,9 @@ class PlaylistManager(object):
             raise PlaylistExists
 
     def add_playlist_from_location(self, loc):
-        playlist = Playlist('New playlist')
-        playlist.set_loc(loc)
-        playlist.load_self()
-        self.playlists.append(playlist)
+        if os.path.isfile(loc):
+            playlist = pickle.load(open(loc, 'rb'))
+            self.playlists.append(playlist)
 
     def save_playlist(self, pl, loc=None, overwrite=False):
         """
