@@ -1,5 +1,4 @@
 from playlist import Playlist
-from track import Track
 from common import *
 try:
     import cPickle as pickle
@@ -8,8 +7,9 @@ except ImportError:
 
 
 class PlaylistManager(object):
+
     def __init__(self):
-    	self.playlists = []
+        self.playlists = []
         self.playlist_list = {}
         self.playlist_list_loc = get_appdata_dir() + '/' + 'playlist_list.miu'
         self.load_playlist_list()
@@ -56,12 +56,12 @@ class PlaylistManager(object):
                 playlist should it happen to already exist
         """
         if overwrite or pl._name not in [p._name for p in self.playlists]:
-			pl.save_self(loc)
-			if not pl in [p._name for p in self.playlists]:
-				self.playlists.append(pl)
+            pl.save_self(loc)
+            if not pl in [p._name for p in self.playlists]:
+                self.playlists.append(pl)
 
         else:
-        	raise PlaylistExists
+            raise PlaylistExists
 
     def remove_playlist(self, playlist):
         """
@@ -94,4 +94,4 @@ class PlaylistManager(object):
 
 
 class PlaylistExists(Exception):
-	pass
+    pass
