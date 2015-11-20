@@ -39,14 +39,17 @@ class PlaylistTable(QtGui.QTableWidget):
 
 class TabNameLineEdit(QtGui.QLineEdit):
     editingFinished = QtCore.pyqtSignal()
+    cancelingFinished = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
         super(TabNameLineEdit, self).__init__(parent)
 
     def keyPressEvent(self, e):
-        if (e.key() == QtCore.Qt.Key_Escape or \
-                e.key() == QtCore.Qt.Key_Return) and self.hasFocus:  # lol, Key_Return means press Enter
+        if e.key() == QtCore.Qt.Key_Return:
             self.editingFinished.emit()
+        elif e.key() == QtCore.Qt.Key_Escape:  # lol, Key_Return means press Enter
+            self.cancelingFinished.emit()
+        super(TabNameLineEdit, self).keyPressEvent(e)
 
 
 class QTabBar(QtGui.QTabBar):
@@ -77,14 +80,19 @@ class QTabBar(QtGui.QTabBar):
         self.__edit.selectAll()
         self.__edit.setFocus()
         self.__edit.editingFinished.connect(self.finish_rename)
+        self.__edit.cancelingFinished.connect(self.cancel_rename)
 
     @QtCore.pyqtSlot()
     def finish_rename(self):
         self.__edit = self.sender()
         self.setTabText(self.__edited_tab, self.__edit.text())
-        self.__edit.hide()
         self.__edit.deleteLater()
-        print self.__edit
+        # print self.__edit
+
+    @QtCore.pyqtSlot()
+    def cancel_rename(self):
+        self.__edit = self.sender()
+        self.__edit.deleteLater()
 
 
 class TabBarPlus(QtGui.QTabBar):
