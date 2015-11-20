@@ -29,7 +29,7 @@ class Player():
             return "Done playing " + self.player.get_property('current-uri')
 
     def set_file(self, filepath):
-        self.player.set_property('uri', 'file:///' + filepath)
+        self.player.set_property('uri', u'file:///' + filepath)
 
     def get_status(self):
         '''
@@ -52,6 +52,11 @@ class Player():
                     return -2
                 elif state == Gst.State.PAUSED:
                     return -3
+
+    def play_given_song(self, loc):
+        self.player.set_state(Gst.State.NULL)
+        self.set_file(loc)
+        self.player.set_state(Gst.State.PLAYING)
 
     def play(self):
         if self.get_status() == IS_DONE:
