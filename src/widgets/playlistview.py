@@ -45,9 +45,9 @@ class TabNameLineEdit(QtGui.QLineEdit):
         super(TabNameLineEdit, self).__init__(parent)
 
     def keyPressEvent(self, e):
-        if e.key() == QtCore.Qt.Key_Return:
+        if e.key() == QtCore.Qt.Key_Return:  # lol, Key_Return means press Enter
             self.editingFinished.emit()
-        elif e.key() == QtCore.Qt.Key_Escape:  # lol, Key_Return means press Enter
+        elif e.key() == QtCore.Qt.Key_Escape:
             self.cancelingFinished.emit()
         super(TabNameLineEdit, self).keyPressEvent(e)
 
