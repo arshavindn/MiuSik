@@ -23,10 +23,66 @@ except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
 
+class VolumeButton(QtGui.QToolButton):
+    mouse_enter = QtCore.pyqtSignal()
+
+    def __init__(self, parent):
+        super(self.__class__, self).__init__(parent)
+        self.clicked.connect(self.stop_show_slider)
+
+    def enterEvent(self, event):
+        self.hide_slider = QtCore.QTimer()
+        self.hide_slider.setSingleShot(True)
+        self.hide_slider.timeout.connect(self.parent().parent().volume_slider.hide)
+        self.show_slider = QtCore.QTimer()
+        self.show_slider.timeout.connect(self.showing_slider)
+        self.show_slider.setSingleShot(True)
+        self.show_slider.start(500)
+
+    def leaveEvent(self, event):
+        self.hide_slider.start(1500)
+
+    def stop_show_slider(self):
+        self.show_slider.stop()
+
+    @QtCore.pyqtSlot()
+    def showing_slider(self):
+        vol_btn_pos = self.parent().parent().volume_button.pos()
+        self.parent().parent().volume_slider.move(vol_btn_pos.x()+25, vol_btn_pos.y()-2)
+        self.parent().parent().volume_slider.show()
+
+
+class VolumeSilder(QtGui.QFrame):
+    """docstring for VolumeSilder"""
+    mouse_over = QtCore.pyqtSignal()
+
+    def __init__(self, parent=None):
+        super(VolumeSilder, self).__init__(parent)
+        self.setLineWidth(1)
+        self.setMidLineWidth(0)
+        self.setFrameShape(QtGui.QFrame.Box | QtGui.QFrame.Raised)
+        self.slider = QtGui.QSlider()
+        self.slider.setOrientation(QtCore.Qt.Horizontal)
+        self.setFixedWidth(120)
+        hbox = QtGui.QHBoxLayout(self)
+        hbox.setMargin(2)
+        hbox.setSpacing(0)
+        hbox.addWidget(self.slider)
+        self.setLayout(hbox)
+
+    def enterEvent(self, event):
+        self.parent().parent().volume_button.hide_slider.stop()
+        self.parent().parent().volume_button.hide_slider.deleteLater()
+
+    def leaveEvent(self, event):
+        QtCore.QTimer.singleShot(200, self.hide)
+        print "Yo"
+
+
 class Ui_main_window(object):
     def setupUi(self, main_window):
         main_window.setObjectName(_fromUtf8("main_window"))
-        main_window.resize(582, 521)
+        main_window.resize(580, 520)
         main_window.setToolButtonStyle(QtCore.Qt.ToolButtonIconOnly)
         main_window.setAnimated(True)
         main_window.setTabShape(QtGui.QTabWidget.Triangular)
@@ -262,6 +318,8 @@ class Ui_main_window(object):
         self.horizontalLayout_4 = QtGui.QHBoxLayout()
         self.horizontalLayout_4.setSizeConstraint(QtGui.QLayout.SetMaximumSize)
         self.horizontalLayout_4.setObjectName(_fromUtf8("horizontalLayout_4"))
+
+        # shuffle button
         self.shuffle_button = QtGui.QToolButton(self.centralwidget)
         self.shuffle_button.setMinimumSize(QtCore.QSize(24, 24))
         self.shuffle_button.setMaximumSize(QtCore.QSize(24, 24))
@@ -271,6 +329,15 @@ class Ui_main_window(object):
         self.shuffle_button.setIcon(icon12)
         self.shuffle_button.setObjectName(_fromUtf8("shuffle_button"))
         self.horizontalLayout_4.addWidget(self.shuffle_button, QtCore.Qt.AlignVCenter)
+        shuffle_button_menu = QtGui.QMenu()
+        ag = QtGui.QActionGroup(shuffle_button_menu, exclusive=True)
+        for mode in ("Off", "Album", "Playlist"):
+            act = ag.addAction(QtGui.QAction(mode, shuffle_button_menu, checkable=True))
+            shuffle_button_menu.addAction(act)
+        self.shuffle_button.setMenu(shuffle_button_menu)
+        self.shuffle_button.setPopupMode(2)
+
+        # repeat button
         self.repeat_button = QtGui.QToolButton(self.centralwidget)
         self.repeat_button.setMinimumSize(QtCore.QSize(24, 24))
         self.repeat_button.setMaximumSize(QtCore.QSize(24, 24))
@@ -280,7 +347,20 @@ class Ui_main_window(object):
         self.repeat_button.setIcon(icon13)
         self.repeat_button.setObjectName(_fromUtf8("repeat_button"))
         self.horizontalLayout_4.addWidget(self.repeat_button, QtCore.Qt.AlignVCenter)
-        self.volume_button = QtGui.QToolButton(self.centralwidget)
+        repeat_button_menu = QtGui.QMenu()
+        ag = QtGui.QActionGroup(repeat_button_menu, exclusive=True)
+        for mode in ("Off", "Song", "Album", "Playlist"):
+            act = ag.addAction(QtGui.QAction(mode, repeat_button_menu, checkable=True))
+            repeat_button_menu.addAction(act)
+        self.repeat_button.setMenu(repeat_button_menu)
+        self.repeat_button.setPopupMode(2)
+
+        # volume slider
+        self.volume_slider = VolumeSilder(self.centralwidget)
+        self.volume_slider.slider.setRange(0, 100)
+        self.volume_slider.hide()
+        # volume button
+        self.volume_button = VolumeButton(self.centralwidget)
         self.volume_button.setMinimumSize(QtCore.QSize(24, 24))
         self.volume_button.setMaximumSize(QtCore.QSize(24, 24))
         self.volume_button.setText(_fromUtf8(""))

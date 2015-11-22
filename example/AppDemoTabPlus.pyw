@@ -12,7 +12,9 @@ class TabBarPlus(QtGui.QTabBar):
         # Plus Button
         self.plusButton = QtGui.QToolButton()
         plusButtonIcon = QtGui.QIcon()
-        plusButtonIcon.addPixmap(QtGui.QPixmap("D:/Cloud/Dropbox/Programming/Code/py/Music_App/Icons/TabBar/add_tab.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        plusButtonIcon.addPixmap(QtGui.QPixmap(
+                                               "D:/Cloud/Dropbox/Programming/Code/py/Music_App/Icons/TabBar/add_tab.png"),
+                                               QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.plusButton.setIcon(plusButtonIcon)
         self.plusButton.setIconSize(QtCore.QSize(22, 22))
         self.plusButton.setParent(self)
