@@ -48,8 +48,10 @@ class VolumeButton(QtGui.QToolButton):
     @QtCore.pyqtSlot()
     def showing_slider(self):
         vol_btn_pos = self.parent().parent().volume_button.pos()
-        self.parent().parent().volume_slider.move(vol_btn_pos.x()+25, vol_btn_pos.y()-2)
+        self.parent().parent().volume_slider.move(vol_btn_pos.x()+25, vol_btn_pos.y()+1)
         self.parent().parent().volume_slider.show()
+        # raise the slider to avoid the layout break mouse enter event
+        self.parent().parent().volume_slider.raise_()
 
 
 class VolumeSilder(QtGui.QFrame):
@@ -63,7 +65,9 @@ class VolumeSilder(QtGui.QFrame):
         self.setFrameShape(QtGui.QFrame.Box | QtGui.QFrame.Raised)
         self.slider = QtGui.QSlider()
         self.slider.setOrientation(QtCore.Qt.Horizontal)
-        self.setFixedWidth(120)
+        self.setFixedSize(100, 23)
+        self.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.setMouseTracking(True)
         hbox = QtGui.QHBoxLayout(self)
         hbox.setMargin(2)
         hbox.setSpacing(0)
@@ -331,7 +335,7 @@ class Ui_main_window(object):
         self.horizontalLayout_4.addWidget(self.shuffle_button, QtCore.Qt.AlignVCenter)
         shuffle_button_menu = QtGui.QMenu()
         ag = QtGui.QActionGroup(shuffle_button_menu, exclusive=True)
-        for mode in ("Off", "Album", "Playlist"):
+        for mode in ("Off", "On"):
             act = ag.addAction(QtGui.QAction(mode, shuffle_button_menu, checkable=True))
             shuffle_button_menu.addAction(act)
         self.shuffle_button.setMenu(shuffle_button_menu)

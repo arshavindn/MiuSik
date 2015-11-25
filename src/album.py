@@ -10,7 +10,7 @@ class Album(object):
         self.__info['albumartist'] = albumartist
         if date:
             self.__info['date'] = date
-        self.__songs = []
+        self.__songs = []  # list of locations of tracks
 
     def __len__(self):
         return len(self.__songs)

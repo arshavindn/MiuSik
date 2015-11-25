@@ -43,10 +43,16 @@ class Playlist():
     def rename(self, name):
         self._name = name
 
+    def get_name(self):
+        return self._name
+
     def get_album_from_info(self, album, albumartist):
         return self.__albums.get((album, albumartist))
 
     def get_loc_list(self):
+        """
+            Return a list of tracks' location
+        """
         loc_list = []
         for album in self.get_albums():
             loc_list.extend(album.get_songs())
@@ -76,7 +82,7 @@ class Playlist():
             tr_cover = track.get_tag_disk('cover')
             if tr_cover:
                 coverdb.add_cover(tr_album, tr_albumartist, tr_cover)
-        return True
+        return track
 
     def remove_track(self, loc, trackdb):
         """

@@ -3,6 +3,7 @@ import sys
 import os
 from src.metadata.mp3 import MP3Format
 from src.metadata.tags import tag_data
+from src import common
 
 SONGS = ['D:\Drive E\Music\Arms - Christina Perri.mp3',
          'D:\Drive E\Music\Air Supply - All Out Of Love.mp3',
@@ -26,11 +27,27 @@ def get_tags(uri):
                 tags_pair[tag] = value
     return tags_pair
 
+class CustomTable(QtGui.QTableWidget):
+    sort_items = QtCore.pyqtSignal(int, QtCore.Qt.SortOrder)
+    def __init__(self, parent=None):
+        super(self.__class__, self).__init__(parent)
+        self.connect(self, QtCore.SIGNAL("sort_items(int)"), self.print_sorted_col)
+        # self.connect(self.horizontalHeader(),
+        #              QtCore.SIGNAL("sortIndicatorChanged(int, Qt::SortOrder)"),
+        #              self.print_sorted_col)
+        self.setSortingEnabled(True)
+
+    def sortItems(self, col, order):
+        super(self.__class__, self).sortItems(col, order)
+        self.sort_items.emit(col)
+
+    def print_sorted_col(self, col, order):
+        print col, order
 
 class Example(QtGui.QWidget):
     def __init__(self, parent=None):
         super(Example, self).__init__(parent)
-        self.table = QtGui.QTableWidget()
+        self.table = CustomTable()
         self.table.setSortingEnabled(True)
         # Enable dragging horizontal header
         self.table.horizontalHeader().setMovable(True)
@@ -53,6 +70,7 @@ class Example(QtGui.QWidget):
         self.setLayout(vbox)
         qss_file = open('D:\Cloud\Dropbox\Programming\Code\py\Miusik\Example\stylesheet\example.qss').read()
         self.setStyleSheet(qss_file)
+        self.table.hideColumn(0)
 
         self.show()
 
@@ -65,7 +83,7 @@ class Example(QtGui.QWidget):
                     if type(value) is list:
                         string = ', '.join(value)
                     elif type(value) is float:
-                        string = str(value)
+                        string = common.format_time(value)
                     # self.table.setCurrentCell(row, col)
                     # print self.table.currentRow(), self.table.currentColumn()
                     self.table.setItem(row, col, QtGui.QTableWidgetItem(QtCore.QString(string)))

@@ -19,6 +19,17 @@ default_session_settings = {
 }
 
 
+def format_time(seconds):
+    seconds = int(round(seconds))
+    hours = int(seconds) / 3600
+    mins = int(seconds) / 60 - hours * 60
+    secs = int(seconds) - hours * 3600 - mins * 60
+    if hours == 0:
+        return "%d:%d" %(mins, secs)
+    else:
+        return "%d:%d:%d" %(hours, mins, secs)
+
+
 class VersionError(Exception):
     """
        Represents version discrepancies

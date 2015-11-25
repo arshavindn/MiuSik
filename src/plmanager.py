@@ -8,11 +8,46 @@ except ImportError:
 
 class PlaylistManager(object):
 
-    def __init__(self):
+    def __init__(self, loc=None):
         self.playlists = []
-        self.playlist_list = {}
-        self.playlist_list_loc = get_appdata_dir() + '/' + 'playlist_list.miu'
-        self.load_playlist_list()
+        self.removed_playlists = []
+        # current_playlist is a playlist that has a track is playing,
+        # if no track is playling, current playlist
+        # will be current tab (that contains a playlist).
+        # TODO: so, how to set current_playlist satifying this condition.
+        self.current_playlist = -1
+        self.played_song = []
+        if loc:
+            self._loc = loc
+            self.load_playlist_list()
+
+    def __len__(self):
+        return len()
+
+    def set_cur_pl(self, index):
+        self.current_playlist = index
+
+    def get_playlist(self, index):
+        try:
+            return self.playlists[index]
+        except IndexError:
+            pass
+
+    def get_playlist_names(self):
+        """
+            Return a list of names of playlists.
+        """
+        result = []
+        for playlist in self.playlists:
+            result.append(playlist.get_name())
+        return result
+
+    def choose_next_song(self, track_list, shuffle, repeat):
+        """
+            Chosse next song for playing.
+        """
+        # We have para track list because when shuffle, repeat change,
+        # the playing list is being play will change or when user sorts the playlist table.
 
     def load_playlist_list(self):
         if os.path.isfile(self.playlist_list_loc):
@@ -34,63 +69,24 @@ class PlaylistManager(object):
         with open(self.playlist_list_loc, 'wb') as output:
             pickle.dump(playlist_list, output, pickle.HIGHEST_PROTOCOL)
 
-    def add_playlist(self, name, loc):
-        if not os.path.isfile(loc) and name not in [p._name for p in self.playlists]:
-            playlist = Playlist(name)
-            playlist.set_loc(loc)
-            self.playlists.append(playlist)
-        else:
-            raise PlaylistExists
+    def add_new_playlist(self, loc=None):
+        """
+            Add a new playlist with default name and default location.
+        """
+        name = "Playlist " + str(len(self.get_playlist_names())+1)
+        playlist = Playlist(name)
+        if loc:
+            playlist.set(loc)
+            playlist.load_self()
+        self.playlists.append(playlist)
+        return playlist
 
-    def add_playlist_from_location(self, loc):
-        if os.path.isfile(loc):
-            playlist = pickle.load(open(loc, 'rb'))
-            self.playlists.append(playlist)
+    def remove_playlist(self, index):
+        self.removed_playlists.append(self.playlists.pop(index))
 
-    def save_playlist(self, pl, loc=None, overwrite=False):
-        """
-            Saves a playlist
-
-            @param pl: the playlist
-            @param overwrite: Set to [True] if you wish to overwrite a
-                playlist should it happen to already exist
-        """
-        if overwrite or pl._name not in [p._name for p in self.playlists]:
-            pl.save_self(loc)
-            if not pl in [p._name for p in self.playlists]:
-                self.playlists.append(pl)
-
-        else:
-            raise PlaylistExists
-
-    def remove_playlist(self, playlist):
-        """
-            Removes a playlist from the manager
-        """
-        if playlist in self.playlists:
-            self.playlists.remove(playlist)
-
-    def remove_playlist_with_file(self, playlist):
-        """
-            Removes a playlist from the manager, also
-            physically deletes its
-        """
-        if playlist in self.playlists:
-            try:
-                os.remove(playlist._loc)
-            except OSError:
-                pass
-            self.playlists.remove(playlist)
-
-    def rename_playlist(self, playlist, new_name):
-        """
-            Renames the playlist to new_name
-        """
-        old_name = playlist._name
-        if old_name in [p._name for p in self.playlists]:
-            self.remove_playlist_with_file(playlist)
-            playlist.rename(new_name)
-            self.save_playlist(playlist, playlist._loc)
+    def reindex_list(self, des, tar):
+        tar_obj = self.playlists.pop(tar)
+        self.playlists.insert(des, tar_obj)
 
 
 class PlaylistExists(Exception):

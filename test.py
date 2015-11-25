@@ -1,12 +1,12 @@
-from test import test_plmanager
+from test import test_plmanager, test_track
 
 
 # def testMetadata():
 #     test_metadata.test1()
 
 
-# def testTrack():
-#     test_track.test1()
+def testTrack():
+    test_track.test1()
 
 
 # def testTrackDB():
@@ -24,7 +24,7 @@ def testPlaylistManager():
 	test_plmanager.test1()
 
 if __name__ == '__main__':
-    # testTrack()
+    testTrack()
     # testMetadata()
     # testPlaylist()
-    testPlaylistManager()
+    # testPlaylistManager()

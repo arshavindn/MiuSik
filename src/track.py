@@ -66,8 +66,11 @@ class Track(object):
             value = self.__tags.get(tag, 0)
         else:
             value = self.__tags.get(tag)
-
-        if join and value and not tag.startswith('__'):
+        # if value is None:
+        #     value = [value]
+        if join and not tag.startswith('__'):
+            if not isinstance(value, list):
+                value = [value]
             value = u"; ".join([item for item in value if item not in (None, u'', '')])
 
         return value
