@@ -18,6 +18,12 @@ class Album(object):
     def __str__(self):
         return str(self.__songs)
 
+    def has_track(self, loc):
+        """
+            Check if album has given track.
+        """
+        return loc in self.__songs
+
     def get_info(self, info):
         return self.__info.get(info)
 

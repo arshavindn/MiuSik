@@ -17,6 +17,7 @@ class PlaylistManager(object):
         # TODO: so, how to set current_playlist satifying this condition.
         self.current_playlist = -1
         self.played_song = []
+        self.current_song = None
         if loc:
             self._loc = loc
             self.load_playlist_list()
@@ -42,12 +43,13 @@ class PlaylistManager(object):
             result.append(playlist.get_name())
         return result
 
-    def choose_next_song(self, track_list, shuffle, repeat):
+    def choose_next_song(self, track_list, shuffle):
         """
             Chosse next song for playing.
         """
         # We have para track list because when shuffle, repeat change,
         # the playing list is being play will change or when user sorts the playlist table.
+        pass
 
     def load_playlist_list(self):
         if os.path.isfile(self.playlist_list_loc):

@@ -3,15 +3,17 @@
 from PyQt4 import QtGui, QtCore
 from src.metadata.tags import tag_data
 from src.common import format_time
+from src.playlist import Playlist
+from random import randrange
 
-
-class PlaylistTable(QtGui.QTableWidget):
+class PlaylistTable(QtGui.QTableWidget, Playlist):
     __all_header = tuple(tag_data.keys())
     shown_header = ['title', 'album', 'artist', '__length']
     sort_items = QtCore.pyqtSignal(int)
 
-    def __init__(self):
-        super(PlaylistTable, self).__init__()
+    def __init__(self, name, parent=None):
+        QtGui.QTableWidget.__init__(self, parent)
+        Playlist.__init__(self, name)
         self.setFrameShape(QtGui.QFrame.NoFrame)
         self.setFrameShadow(QtGui.QFrame.Sunken)
         self.setLineWidth(0)
@@ -28,17 +30,13 @@ class PlaylistTable(QtGui.QTableWidget):
         self.setSortingEnabled(True)
         self.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
+        self.setAlternatingRowColors(True)
         self.setRowCount(0)
 
         self.set_headers()
         # TODO: creat menu when right click on header,
         # so user can set show or hide some tag raw
         # header_right_menu
-        # self.connect(self, QtCore.SIGNAL("sort_items(int)"), self.print_sorted_col)
-
-    # def sortItems(self, column, order):
-    #     super(self.__class__, self).sortItems(column, order)
-    #     self.sort_items.emit(column)
 
     def print_sorted_col(self, col):
         print col
@@ -61,7 +59,7 @@ class PlaylistTable(QtGui.QTableWidget):
             This index is also logical index in table header.
         """
         try:
-            return self.__all_header.index(tag)
+            return self.__all_header.index(tag) + 1
         except ValueError():
             return -1
 
@@ -71,37 +69,39 @@ class PlaylistTable(QtGui.QTableWidget):
         """
         pass
 
-    def get_loc_list(self):
+    def get_loc_list_gui(self):
         """
-            Get list of location of all tracks on table.
-            It useful when the table is re-sorted.
+            Get list of locations of all tracks on table.
+            It's useful when the table is re-sorted.
         """
         loc_header_index = self.get_headertag_index("__loc")
         result = []
-        for row in self.rowCount():
+        for row in range(self.rowCount()):
             result.append(unicode(self.item(row, loc_header_index).text()))
         return result
 
-    def add_track(self, track):
+    def add_track(self, loc, trackdb, coverdb):
         """
             Fill the info of a track to a row in table.
         """
-        row = self.rowCount()  # current row, cause it counts from 0 :))
-        self.setRowCount(self.rowCount() + 1)
-        for tag_index in range(len(self.__all_header)):
-            # !!!: 0 index is "Playing" header
-            raw = self.__all_header[tag_index]
-            if raw.startswith("__"):
-                value = track.get_tag_raw(raw)
-                if value == None:
-                    value = u""
-                if raw == "__length":
-                    value = format_time(value)
-            else:
-                value = track.get_tag_raw(raw, True)
-            item = QtGui.QTableWidgetItem(QtCore.QString(value))
-            col = tag_index + 1
-            self.setItem(row, col, item)
+        track = Playlist.add_track(self, loc, trackdb, coverdb)
+        if track:
+            row = self.rowCount()  # current row, cause it counts from 0 :))
+            self.setRowCount(self.rowCount() + 1)
+            for tag_index in range(len(self.__all_header)):
+                # !!!: 0 index is "Playing" header
+                raw = self.__all_header[tag_index]
+                if raw.startswith("__"):
+                    value = track.get_tag_raw(raw)
+                    if value == None:
+                        value = u""
+                    if raw == "__length":
+                        value = format_time(value)
+                else:
+                    value = track.get_tag_raw(raw, True)
+                item = QtGui.QTableWidgetItem(QtCore.QString(value))
+                col = tag_index + 1
+                self.setItem(row, col, item)
 
 
 class TabNameLineEdit(QtGui.QLineEdit):
@@ -132,7 +132,7 @@ class QTabBar(QtGui.QTabBar):
 
     def __init__(self, parent=None):
         super(QTabBar, self).__init__(parent)
-        self.__line_edit = None
+        self.__edited_tab = -1
         self.connect(self, QtCore.SIGNAL("currentChanged(int)"), self.current_changed_hdler)
         self.connect(self, QtCore.SIGNAL("tabMoved(int, int)"), self.tab_moved_hdler)
         self.connect(self, QtCore.SIGNAL("tabCloseRequested(int)"), self.tab_close_requested_hdler)
@@ -171,7 +171,7 @@ class QTabBar(QtGui.QTabBar):
 
     def tabLayoutChange(self):
         super(self.__class__, self).tabLayoutChange()
-        if self.__line_edit:
+        if self.__edited_tab != -1:
             self.__line_edit.raise_()
             top_margin = 3
             left_margin = 6
@@ -184,11 +184,11 @@ class QTabBar(QtGui.QTabBar):
         top_margin = 3
         left_margin = 6
         rect = self.tabRect(tab_index)
-        if not self.__line_edit:  # K co tab nao dang rename
+        try:  # Dang co rename mot tab nao do, va self.__line_edit da duoc tao
+            self.__line_edit.clear()  # xoa text trong lineedit di
+        except (AttributeError, RuntimeError):
             self.__line_edit = TabNameLineEdit(self)
             self.__line_edit.show()
-        else:  # Dang co rename mot tab nao do, va self.__line_edit da duoc tao
-            self.__line_edit.clear()  # xoa text trong lineedit di
         # di chuyen line_edit den tab can rename
         self.__line_edit.move(rect.left() + left_margin, rect.top() + top_margin)
         self.__line_edit.resize(rect.width() - 2 * left_margin,
@@ -206,13 +206,14 @@ class QTabBar(QtGui.QTabBar):
         if len(self.__line_edit.text()) != 0:
             self.setTabText(self.__edited_tab, qname)
             self.finishedRename.emit(self.__edited_tab, qname)
+        self.__edited_tab = -1
         self.__line_edit.deleteLater()
-        self.__line_edit = None
 
     @QtCore.pyqtSlot()
     def cancel_rename(self):
+        self.__edited_tab = -1
         self.__line_edit.deleteLater()
-        self.__line_edit = None
+
 # end clss QTabBar
 
 
@@ -221,6 +222,17 @@ class CustomTabWidget(QtGui.QTabWidget):
 
     def __init__(self, parent=None):
         super(CustomTabWidget, self).__init__(parent)
+        ################
+        # For managering
+        ################
+        # The right current playlist is a playlist that has a track is playing,
+        # if no track is playling, current playlist
+        # will be current tab (that contains a playlist).
+        # TODO: so, how to set current_playlist satifying this condition.
+        self.current_playlist_index = -1
+        self.current_song = None  # location of current song.
+        self.current_album = None  # Album obj of current album.
+        # self.get_list_for_play()
 
         # Tab Bar
         # self.tab = QtGui.QTabBar()
@@ -239,13 +251,74 @@ class CustomTabWidget(QtGui.QTabWidget):
 
         # Signals and slots
         self.tabCloseRequested.connect(self.removeTab)
+        self.connect(self.tab_bar, QtCore.SIGNAL("finishedRename(int, QString)"),
+                     self.rename_playlist)
 
-    def addTab(self, tab_name):
-        string = QtCore.QString.fromUtf8(tab_name)
-        table = PlaylistTable()
-        index = super(CustomTabWidget, self).addTab(table, string)
+    def get_current_playlist(self):
+        return self.widget(self.current_playlist_index)
+
+    def addTab(self):
+        pl_name = QtCore.QString("Playlist " + str(self.get_playlist_num()+1))
+        table = PlaylistTable(pl_name)
+        index = super(CustomTabWidget, self).addTab(table, pl_name)
         self.setCurrentIndex(index)
+        # if not self.current_song:
+        #     self.current_playlist_index = index
+        #     self.current_song = self.get_current_playlist().get_loc_list_gui()[0]
+        # print self.currentWidget().get_name()
         return index
+
+    def rename_playlist(self, int, qname):
+        """
+            Method called when finish rename.
+        """
+        name = unicode(qname)
+        self.widget(int).rename(name)
+        print self.widget(int).get_name()
+
+    def get_playlist_num(self):
+        """
+            Get number of playlists.
+        """
+        return self.count()
+
+    def get_list_for_play(self, repeat):
+        """
+            Get a list contains song from which can choose the next song.
+            If repeat off or playlist, return whole current playlist,
+            if repeat is song, return a list has only current song,
+            if repeat is album, return a list that is album of current song.
+        """
+        # One important thing is the return list must
+        # keep rightly the order of the table GUI list.
+        # So it will be hard, because this class's independent with table GUI.
+        if self.current_playlist_index != -1:
+            if repeat == "Off" or repeat == "Playlist":
+                self.list_for_play = self.get_current_playlist().get_loc_list_gui()
+            elif repeat == "Song":
+                self.list_for_play = [self.current_song]
+            elif repeat == "Album":
+                cr_album_tracks = self.current_album.get_songs()
+                self.list_for_play = filter(lambda track: track in cr_album_tracks,
+                                            self.get_current_playlist().get_loc_list_gui())
+        else:
+            self.list_for_play = []
+
+    def choose_next_song(self, shuffle):
+        """
+            Chosse next song for playing.
+        """
+        # We have para track list because when shuffle, repeat change,
+        # the playing list is being play will change or when user sorts the playlist table.
+        if shuffle == "Off":
+            try:
+                self.current_song = self.list_for_play[self.list_for_play.index(self.current_song) + 1]
+            except (ValueError, IndexError):
+                self.current_song = self.list_for_play[0]
+        else:
+            self.current_song = self.list_for_play[randrange(len(self.list_for_play))]
+        return self.current_song
+
 # end class CustomTabWidget
 
 class AppDemo(QtGui.QMainWindow):

@@ -25,9 +25,9 @@ def format_time(seconds):
     mins = int(seconds) / 60 - hours * 60
     secs = int(seconds) - hours * 3600 - mins * 60
     if hours == 0:
-        return "%d:%d" %(mins, secs)
+        return "%d:%02d" %(mins, secs)
     else:
-        return "%d:%d:%d" %(hours, mins, secs)
+        return "%02d:%02d:%02d" %(hours, mins, secs)
 
 
 class VersionError(Exception):

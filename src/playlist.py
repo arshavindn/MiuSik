@@ -7,10 +7,12 @@ except ImportError:
 
 
 class Playlist():
-    def __init__(self, name, loc=None):
-        self._name = name
+    def __init__(self, name=None, loc=None):
+        if name:
+            self._name = name
         self.__albums = {}  # pairs of (album, albumartist) tuple and Album object
         self.__total_duration = 0
+        self.played_songs = []
         if loc:
             self._loc = loc
             self.load_self()
@@ -33,6 +35,12 @@ class Playlist():
 
     def get_albums_keys(self):
         return self.__albums.iterkeys()
+
+    def get_album_from_loc(self, loc):
+        for album in self.get_albums():
+            if album.has_track(loc):
+                return album
+        return None
 
     def get_albums(self):
         return self.__albums.itervalues()
