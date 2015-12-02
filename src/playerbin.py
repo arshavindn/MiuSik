@@ -1,6 +1,9 @@
-import gi
-gi.require_version('Gst', '1.0')
+# import gi
+from gi import require_version
+require_version('Gst', '1.0')
+require_version('GstAudio', '1.0')
 from gi.repository import Gst, GstAudio
+Gst.init(None)
 
 # STATE
 NOT_PLAYING = -1
@@ -11,8 +14,9 @@ IS_DONE = -4
 
 class Player():
     def __init__(self):
-        Gst.init(None)
         self.player = Gst.ElementFactory.make("playbin", "player")
+        fakesink = Gst.ElementFactory.make("fakesink", "fakesink")
+        self.player.set_property("video-sink", fakesink)
         bus = self.player.get_bus()
         bus.add_signal_watch()
         bus.connect("message", self.on_message)
@@ -54,6 +58,7 @@ class Player():
                     return -3
 
     def play_given_song(self, loc):
+        print 'nah'
         self.player.set_state(Gst.State.NULL)
         self.set_file(loc)
         self.player.set_state(Gst.State.PLAYING)
@@ -99,7 +104,7 @@ class Player():
         return self.player.get_volume(GstAudio.StreamVolumeFormat.LINEAR)
 
     def set_volume(self, rate):
-        self.player.set_volume(GstAudio.StreamVolumeFormat.LINEAR, rate)
+        self.player.set_volume(GstAudio.StreamVolumeFormat.LINEAR, rate/100.0)
 
     def on_message(self, bus, message):
         t = message.type

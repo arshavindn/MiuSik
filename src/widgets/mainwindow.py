@@ -80,13 +80,12 @@ class VolumeSilder(QtGui.QFrame):
 
     def leaveEvent(self, event):
         QtCore.QTimer.singleShot(200, self.hide)
-        print "Yo"
 
 
 class Ui_main_window(object):
     def setupUi(self, main_window):
         main_window.setObjectName(_fromUtf8("main_window"))
-        main_window.resize(580, 520)
+        # main_window.resize(580, 520)
         main_window.setToolButtonStyle(QtCore.Qt.ToolButtonIconOnly)
         main_window.setAnimated(True)
         main_window.setTabShape(QtGui.QTabWidget.Triangular)
@@ -385,19 +384,18 @@ class Ui_main_window(object):
         self.playing_song = QtGui.QLabel(self.centralwidget)
         self.playing_song.setMaximumSize(QtCore.QSize(16777215, 35))
         font = QtGui.QFont()
-        font.setFamily(_fromUtf8("Arial Narrow"))
+        font.setFamily(_fromUtf8("Arial"))
         font.setPointSize(20)
         font.setBold(True)
         font.setWeight(75)
         self.playing_song.setFont(font)
-        self.playing_song.setText(_fromUtf8("Play some tune"))
         self.playing_song.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.playing_song.setObjectName(_fromUtf8("playing_song"))
         self.playing_song_info.addWidget(self.playing_song, QtCore.Qt.AlignRight)
         self.artist = QtGui.QLabel(self.centralwidget)
         self.artist.setMaximumSize(QtCore.QSize(16777215, 25))
         font = QtGui.QFont()
-        font.setFamily(_fromUtf8("Arial Narrow"))
+        font.setFamily(_fromUtf8("Arial"))
         font.setPointSize(12)
         self.artist.setFont(font)
         self.artist.setWhatsThis(_fromUtf8(""))
@@ -405,6 +403,7 @@ class Ui_main_window(object):
         self.artist.setAccessibleDescription(_fromUtf8(""))
         self.artist.setText(_fromUtf8(""))
         self.artist.setObjectName(_fromUtf8("artist"))
+        self.artist.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.playing_song_info.addWidget(self.artist, QtCore.Qt.AlignRight)
         self.controler.addLayout(self.playing_song_info)
         self.main_control.addLayout(self.controler)
@@ -427,7 +426,9 @@ class Ui_main_window(object):
         self.duration.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.duration.setObjectName(_fromUtf8("duration"))
         self.slider_area.addWidget(self.duration)
-        self.seek_slider = phonon.Phonon.SeekSlider(self.centralwidget)
+        self.seek_slider = QtGui.QSlider()
+        self.seek_slider.setOrientation(QtCore.Qt.Horizontal)
+        self.seek_slider.setSingleStep(1)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -490,9 +491,6 @@ class Ui_main_window(object):
         self.app_setting_button.setText(_translate("main_window", "Setting", None))
         self.app_info_button.setText(_translate("main_window", "...", None))
         self.search_box.setPlaceholderText(_translate("main_window", "Search", None))
-        # self.tableWidget_2.setSortingEnabled(True)
-        # self.playlists_tabs.setTabText(self.playlists_tabs.indexOf(self.tab_3), _translate("main_window", "Playlist 1", None))
-        # self.playlists_tabs.setTabText(self.playlists_tabs.indexOf(self.tab_4), _translate("main_window", "Playlist 2", None))
         self.position.setText(_translate("main_window", "00:00", None))
 
     def setup_playlist_view(self, main_window):
