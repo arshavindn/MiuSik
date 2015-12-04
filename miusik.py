@@ -195,6 +195,8 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
         self.connect(self.playlists_tabs.currentWidget().horizontalHeader(),
                      QtCore.SIGNAL("sortIndicatorChanged(int, Qt::SortOrder)"),
                      lambda repeat=self.repeat: self.playlists_tabs.get_list_for_play(repeat))
+        self.playlists_tabs.get_list_for_play(self.repeat)
+        print "tab_added", gc.collect()
 
     def open_files_callback(self):
         open_dlg = QtGui.QFileDialog()
