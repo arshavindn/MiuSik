@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import time, gc, os
+import time, gc, os, codecs
 import ConfigParser
 from PyQt4 import QtGui, QtCore
 from src.widgets.mainwindow import Ui_main_window
@@ -263,7 +263,7 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
         sss.set('session', 'volume', self.play_controler.player.get_volume())
         sss.set('session', 'current song', self.playlists_tabs.current_song)
         sss.set('session', 'current playlist index', self.playlists_tabs.current_playlist_index)
-        with open(loc, 'w', encoding='utf-8') as configfile:
+        with codecs.open(loc, 'w', encoding='utf-8') as configfile:
                 sss.write(configfile)
 
     def closeEvent(self, event):
