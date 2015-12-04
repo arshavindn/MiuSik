@@ -1,10 +1,17 @@
 # -*- coding: utf-8 -*-
 
+import os
+import gzip
+from random import randrange
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 from PyQt4 import QtGui, QtCore
 from src.metadata.tags import tag_data
 from src.common import format_time
 from src.playlist import Playlist
-from random import randrange
+
 
 class PlaylistTable(QtGui.QTableWidget, Playlist):
     __all_header = tuple(tag_data.keys())
@@ -63,6 +70,17 @@ class PlaylistTable(QtGui.QTableWidget, Playlist):
         except ValueError():
             return -1
 
+    def get_tag_in_row(self, tag, row):
+        """
+            Get the tag's value in specific row.
+            If not, return None.
+        """
+        col = self.get_headertag_index(tag)
+        if col != -1:
+            return unicode(self.item(row, col).text())
+        else:
+            return None
+
     def show_column(self, header):
         """
             Show hidden column with given header.
@@ -80,28 +98,31 @@ class PlaylistTable(QtGui.QTableWidget, Playlist):
             result.append(unicode(self.item(row, loc_header_index).text()))
         return result
 
-    def add_track(self, loc, trackdb, coverdb):
+    def add_track(self, loc, trackdb):
         """
             Fill the info of a track to a row in table.
         """
-        track = Playlist.add_track(self, loc, trackdb, coverdb)
+        track = Playlist.add_track(self, loc, trackdb)
         if track:
-            row = self.rowCount()  # current row, cause it counts from 0 :))
-            self.setRowCount(self.rowCount() + 1)
-            for tag_index in range(len(self.__all_header)):
-                # !!!: 0 index is "Playing" header
-                raw = self.__all_header[tag_index]
-                if raw.startswith("__"):
-                    value = track.get_tag_raw(raw)
-                    if value == None:
-                        value = u""
-                    if raw == "__length":
-                        value = format_time(value)
-                else:
-                    value = track.get_tag_raw(raw, True)
-                item = QtGui.QTableWidgetItem(QtCore.QString(value))
-                col = tag_index + 1
-                self.setItem(row, col, item)
+            self.fill_row(track)
+
+    def fill_row(self, trackobj):
+        row = self.rowCount()  # current row, cause it counts from 0 :))
+        self.setRowCount(self.rowCount() + 1)
+        for tag_index in range(len(self.__all_header)):
+            # !!!: 0 index is "Playing" header
+            raw = self.__all_header[tag_index]
+            if raw.startswith("__"):
+                value = trackobj.get_tag_raw(raw)
+                if value == None:
+                    value = u""
+                if raw == "__length":
+                    value = format_time(value)
+            else:
+                value = trackobj.get_tag_raw(raw, True)
+            item = QtGui.QTableWidgetItem(QtCore.QString(value))
+            col = tag_index + 1
+            self.setItem(row, col, item)
 
 
 class TabNameLineEdit(QtGui.QLineEdit):
@@ -219,6 +240,7 @@ class QTabBar(QtGui.QTabBar):
 
 class CustomTabWidget(QtGui.QTabWidget):
     """Tab Widget that that can have new tabs easily added to it."""
+    tab_added = QtCore.pyqtSignal(int)
 
     def __init__(self, parent=None):
         super(CustomTabWidget, self).__init__(parent)
@@ -238,6 +260,7 @@ class CustomTabWidget(QtGui.QTabWidget):
         # self.tab = QtGui.QTabBar()
         self.tab_bar = QTabBar()
         self.setTabBar(self.tab_bar)
+        self.tables = set([])
 
         # Properties
         self.setMovable(True)
@@ -253,19 +276,25 @@ class CustomTabWidget(QtGui.QTabWidget):
         self.tabCloseRequested.connect(self.removeTab)
         self.connect(self.tab_bar, QtCore.SIGNAL("finishedRename(int, QString)"),
                      self.rename_playlist)
+        # self.connect(self, QtCore.SIGNAL("tabCloseRequested(int)"), self.del_tab_handler)
+
+    def del_tab_handler(self, inx):
+        # self.tab_bar.
+        pass
 
     def get_current_playlist(self):
         return self.widget(self.current_playlist_index)
 
-    def addTab(self):
-        pl_name = QtCore.QString("Playlist " + str(self.get_playlist_num()+1))
-        table = PlaylistTable(pl_name)
+    def addTab(self, table=None):
+        if not table:
+            pl_name = QtCore.QString("Playlist " + str(self.get_playlist_num()+1))
+            table = PlaylistTable(pl_name)
+        else:
+            pl_name = table.get_name()
+        self.tables.add(table)
         index = super(CustomTabWidget, self).addTab(table, pl_name)
         self.setCurrentIndex(index)
-        # if not self.current_song:
-        #     self.current_playlist_index = index
-        #     self.current_song = self.get_current_playlist().get_loc_list_gui()[0]
-        # print self.currentWidget().get_name()
+        self.tab_added.emit(index)
         return index
 
     def rename_playlist(self, int, qname):
@@ -289,9 +318,6 @@ class CustomTabWidget(QtGui.QTabWidget):
             if repeat is song, return a list has only current song,
             if repeat is album, return a list that is album of current song.
         """
-        # One important thing is the return list must
-        # keep rightly the order of the table GUI list.
-        # So it will be hard, because this class's independent with table GUI.
         if self.current_playlist_index != -1:
             if repeat == "Off" or repeat == "Playlist":
                 self.list_for_play = self.get_current_playlist().get_loc_list_gui()
@@ -318,6 +344,31 @@ class CustomTabWidget(QtGui.QTabWidget):
         else:
             self.current_song = self.list_for_play[randrange(len(self.list_for_play))]
         return self.current_song
+
+    def load_previous_session(self, loc, trackdb):
+        try:
+            with gzip.open(loc, "rb") as f:
+                while True:
+                    try:
+                        data = pickle.load(f)
+                        table = PlaylistTable(data[0])
+                        table.load_data(data[:3])
+                        for loc in data[-1]:
+                            track = trackdb.get_track_by_loc(loc)
+                            table.fill_row(track)
+                        self.addTab(table)
+                    except EOFError:
+                        break
+        except IOError:
+            pass
+
+    def save_session(self, loc):
+        with gzip.open(loc, "w+b") as f:
+                for index in range(self.get_playlist_num()):
+                    playlist = self.widget(index)
+                    data = (playlist.get_name(), playlist.get_albums_dict(),
+                            playlist.get_total_duration(), playlist.get_loc_list_gui())
+                    pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
 
 # end class CustomTabWidget
 

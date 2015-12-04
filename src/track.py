@@ -105,7 +105,7 @@ class Track(object):
 
     def set_tag_raw(self, tag, values):
         if tag in ("__loc", "__basedir", "__basename"):
-            pass
+            return
 
         if not isinstance(values, list):
             if not tag.startswith("__"):  # internal tags don't have to be lists

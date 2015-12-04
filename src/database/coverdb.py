@@ -1,6 +1,7 @@
 from ast import literal_eval
 from src import common
 import shelve
+import gc
 
 
 class CoverDB():
@@ -66,6 +67,7 @@ class CoverDB():
             self.__covers[key] = coverdata[unicode(key).encode('utf-8')]
 
         coverdata.close()
+        print "coverdb load", gc.collect()
 
     def save_db(self, loc=None):
         if not loc:
@@ -86,13 +88,14 @@ class CoverDB():
             self._unsaved_updated_albums = []
             self._added = False
 
-        if self._removed:
-            diff_removed = set(data_keys) - set(self.__covers)
-            for key in diff_removed:
-                del coverdata[str(key).encode('utf-8')]
-            self._removed = False
+        # if self._removed:
+        diff_removed = set(data_keys) - set(self.__covers)
+        for key in diff_removed:
+            del coverdata[str(key).encode('utf-8')]
+        self._removed = False
 
         coverdata.sync()
         coverdata.close()
+        print "coverdb save", gc.collect()
 
 # end class CoverDB

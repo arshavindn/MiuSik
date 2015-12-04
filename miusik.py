@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from src.widgets.mainwindow import Ui_main_window
-from src import common, track, playerbin
-from src.database import trackdb, coverdb
-from PyQt4 import QtGui, QtCore
-import time
+import time, gc, os
 import ConfigParser
+from PyQt4 import QtGui, QtCore
+from src.widgets.mainwindow import Ui_main_window
+from src import common, playerbin
+from src.database import trackdb
 
 
 class MThread(QtCore.QThread):
@@ -22,14 +22,6 @@ class MThread(QtCore.QThread):
         self.func(*self.args, **self.kwargs)
 # end class MThead
 
-def test():
-    for i in range(10):
-        print "tada"
-
-def test2(name):
-    for i in range(5):
-        print name
-
 
 class PlayerControler(QtCore.QThread):
     def __init__(self):
@@ -42,17 +34,24 @@ class PlayerControler(QtCore.QThread):
 
 
 class AddTracksThread(QtCore.QThread):
-    def __init__(self, locs, trackdb, coverdb, table):
+    def __init__(self, locs, trackdb, table):
         super(self.__class__, self).__init__()
         self.locs = locs
         self.trackdb = trackdb
-        self.coverdb = coverdb
+        # self.coverdb = coverdb
         self.table = table
 
     def run(self):
+        # self.trackdb = trackdb.TrackDB(self.trackdb_loc)
+        # self.coverdb = coverdb.CoverDB(self.coverdb_loc)
         for loc in self.locs:
-            self.table.add_track(loc, self.trackdb, self.coverdb)
+            self.table.add_track(loc, self.trackdb)
             time.sleep(0.03)
+        # self.trackdb.save_db()
+        # self.coverdb.save_db()
+        # del track_data
+        # del cover_data
+        print "from add track threads", gc.collect()
 
 
 class Miusik(QtGui.QMainWindow, Ui_main_window):
@@ -63,11 +62,10 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
 
         self.shuffle = "Off"
         self.repeat = "Off"
-        self.load_sss()
         self.trackdb_loc = common.get_appdata_dir() + "/tracks.db"
-        self.coverdb_loc = common.get_appdata_dir() + "/covers.db"
+        # self.coverdb_loc = common.get_appdata_dir() + "/covers.db"
         self.trackdb = trackdb.TrackDB(self.trackdb_loc)
-        self.coverdb = coverdb.CoverDB(self.coverdb_loc)
+        # self.coverdb = coverdb.CoverDB(self.coverdb_loc)
 
         self.choose_next_timer = QtCore.QTimer()
         self.choose_next_timer.timeout.connect(self.next_btn_click)
@@ -81,8 +79,8 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
         self.next_button.clicked.connect(self.next_btn_click)
         self.connect(self.volume_slider.slider, QtCore.SIGNAL("valueChanged(int)"),
                      self.volume_handle)
-        self.connect(self.seek_slider, QtCore.SIGNAL("valueChanged(int)"),
-                     self.play_controler.player.seek)
+        self.connect(self.seek_slider, QtCore.SIGNAL("sliderMoved(int)"),
+                     self.seeker_dragging)
 
         self.set_menu_action(self.shuffle_button, self.shuffle_triggered, self.shuffle)
         self.set_menu_action(self.repeat_button, self.repeat_triggered, self.repeat)
@@ -90,8 +88,10 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
         self.add_file_button.clicked.connect(self.open_files_callback)
         # add tab handler
         self.playlists_tabs.plusButton.clicked.connect(self.add_tab_callback)
-        self.app_info_button.clicked.connect(self.test_playlist_tab)  # for test
-
+        self.connect(self.playlists_tabs, QtCore.SIGNAL("tab_added(int)"), self.tab_added_handler)
+        # previous sesion
+        self.load_sss()
+        self.playlists_tabs.load_previous_session(common.get_appdata_dir() + "/playlists.mpk", self.trackdb)
         settings = QtCore.QSettings()
         # self.recentFiles = settings.value("RecentFiles").toStringList()
         self.restoreGeometry(
@@ -115,15 +115,24 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
         self.play_controler.player.play_given_song(song)
         current_song_len = \
             self.trackdb.get_track_by_loc(song).get_tag_raw('__length')
+        self.choose_next_timer.start(current_song_len*1000)
+        self.seek_slider_timer.start(1000)
         self.playing_song.setText(self.trackdb.get_track_by_loc(song).get_tag_raw('title', True))
         self.artist.setText(self.trackdb.get_track_by_loc(song).get_tag_raw('artist', True))
-        self.choose_next_timer.start(current_song_len*1000)
+        self.position.setText("0:00")
         self.seek_slider.setValue(0)
         self.seek_slider.setRange(0, int(round(current_song_len)))
-        self.seek_slider_timer.start(1000)
+        self.duration.setText(common.format_time(int(round(current_song_len))))
+        self.playlists_tabs.current_album = \
+            self.playlists_tabs.currentWidget().get_album_from_loc(song)
 
     def seek_slider_move(self):
         self.seek_slider.setValue(self.seek_slider.value() + self.seek_slider.singleStep())
+        self.position.setText(common.format_time(self.seek_slider.value()))
+
+    def seeker_dragging(self, pos):
+        self.play_controler.player.seek(pos)
+        self.choose_next_timer.start((self.seek_slider.maximum() - self.seek_slider.value())*1000)
 
     def row_double_click(self, row):
         loc_inx = self.playlists_tabs.currentWidget().get_headertag_index("__loc")
@@ -133,18 +142,20 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
         curr_index = self.playlists_tabs.currentIndex()
         if self.playlists_tabs.current_playlist_index != curr_index:
             self.playlists_tabs.current_playlist_index = curr_index
-            self.playlists_tabs.current_album = self.playlists_tabs.currentWidget().get_album_from_loc(loc)
-        self.playlists_tabs.get_list_for_play(self.repeat)
+            self.playlists_tabs.get_list_for_play(self.repeat)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(":/icons/pause.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.play_pause_button.setIcon(icon)
+        self.play_controler.is_playing = True
 
     def play_toggle(self):
         state = self.play_controler.player.get_status()
         icon = QtGui.QIcon()
+        self.play_controler.is_playing = True
         if state == playerbin.IS_PLAYING:
             self.play_controler.player.pause()
             icon.addPixmap(QtGui.QPixmap(":/icons/play.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            self.seek_slider_timer.stop()
             self.play_controler.is_playing = False
         elif state == playerbin.NOT_PLAYING:
             self.play_song_handle(self.playlists_tabs.current_song)
@@ -152,12 +163,12 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
         elif state == playerbin.PAUSED:
             self.play_controler.player.play()
             icon.addPixmap(QtGui.QPixmap(":/icons/pause.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            self.seek_slider_timer.start()
         else:  # IS_DONE
             self.play_controler.player.stop()
             self.play_controler.player.play()
             icon.addPixmap(QtGui.QPixmap(":/icons/pause.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.play_pause_button.setIcon(icon)
-        self.play_controler.is_playing = True
 
     def next_btn_click(self):
         self.playlists_tabs.current_song = \
@@ -176,30 +187,31 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
 
     def add_tab_callback(self):
         self.playlists_tabs.addTab()
-        self.connect(self.playlists_tabs.currentWidget(), QtCore.SIGNAL("cellDoubleClicked(int,int)"),
-                     self.row_double_click)
         # self.playlists_tabs.tab_bar.start_rename(index)
 
-    def test_playlist_tab(self):
-        """
-            Test playlist tab when click on About button.
-        """
-        table = self.playlists_tabs.widget(0)
-        track1 = track.Track(u"D:\\Drive E\\Vietnam\\B\u1ea3n T\xecnh Ca \u0110\u1ea7u Ti\xean - Duy Khoa.mp3")
-        table.add_track(track1)
+    def tab_added_handler(self):
+        self.connect(self.playlists_tabs.currentWidget(), QtCore.SIGNAL("cellDoubleClicked(int,int)"),
+                     self.row_double_click)
+        self.connect(self.playlists_tabs.currentWidget().horizontalHeader(),
+                     QtCore.SIGNAL("sortIndicatorChanged(int, Qt::SortOrder)"),
+                     lambda repeat=self.repeat: self.playlists_tabs.get_list_for_play(repeat))
 
     def open_files_callback(self):
-        locs = QtGui.QFileDialog.getOpenFileNames(caption="Open Files",
-                                                  directory=common.get_user_dir())
+        open_dlg = QtGui.QFileDialog()
+        locs = open_dlg.getOpenFileNames(parent=self, caption="Open Files",
+                                                  directory='')
         locs = [unicode(f) for f in locs]
+        open_dlg.deleteLater()
         current_index = self.playlists_tabs.currentIndex()
-        if current_index != -1:
+        if current_index != -1 and locs:
             self.add_track_thread = AddTracksThread(locs,
-                                                    self.trackdb, self.coverdb,
+                                                    self.trackdb,
                                                     self.playlists_tabs.currentWidget())
             self.add_track_thread.start()
             self.connect(self.add_track_thread, QtCore.SIGNAL("finished()"),
                          lambda index=current_index: self.add_track_done(index))
+        open_dlg = None
+        print "open file dialog", gc.collect()
 
     def add_track_done(self, index):
         if not self.playlists_tabs.current_song:
@@ -210,7 +222,7 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
             self.playlists_tabs.current_album = \
                 self.playlists_tabs.get_current_playlist().get_album_from_loc(
                     self.playlists_tabs.current_song)
-            self.add_track_thread.deleteLater()
+        self.add_track_thread.deleteLater()
 
     def shuffle_triggered(self, act):
         self.shuffle = str(act.text())
@@ -226,43 +238,46 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
             Load session settings.
         """
         if not loc:
-            loc = common.get_appdata_dir() + "/settings.ini"
+            loc = os.getcwd() + "/settings.ini"
         sss = ConfigParser.ConfigParser()
         sss.read(loc)
         if sss.sections():
             self.shuffle = sss.get('session', 'shuffle')
             self.repeat = sss.get('session', 'repeat')
-            # self.trackdb_loc = sss.get('database', 'trackdb_loc')
-            # self.trackdb_loc = sss.get('database', 'coverdb_loc')
-        else:
-            sss.add_section('session')
-            sss.set('session', 'shuffle', self.shuffle)
-            sss.set('session', 'repeat', self.repeat)
-            with open(loc, 'w') as configfile:
-                sss.write(configfile)
+            self.volume_handle(int(sss.get('session', 'volume')))
+            self.volume_slider.slider.setValue(int(sss.get('session', 'volume')))
+            self.playlists_tabs.current_playlist_index = int(sss.get('session', 'current playlist index'))
+            self.playlists_tabs.setCurrentIndex(self.playlists_tabs.current_playlist_index)
+            self.playlists_tabs.current_song = sss.get('session', 'current song')
 
     def save_sss(self, loc=None):
         if not loc:
-            loc = common.get_appdata_dir() + '/settings.ini'
+            loc = os.getcwd() + '/settings.ini'
+            print loc
         sss = ConfigParser.ConfigParser()
+        sss.read(loc)
         sss.set('session', 'shuffle', self.shuffle)
         sss.set('session', 'repeat', self.repeat)
+        sss.set('session', 'volume', self.play_controler.player.get_volume())
+        sss.set('session', 'current song', self.playlists_tabs.current_song)
+        sss.set('session', 'current playlist index', self.playlists_tabs.current_playlist_index)
         with open(loc, 'w') as configfile:
                 sss.write(configfile)
 
     def closeEvent(self, event):
+        self.playlists_tabs.save_session(common.get_appdata_dir() + "/playlists.mpk")
         settings = QtCore.QSettings()
         settings.setValue("MainWindow/Geometry", QtCore.QVariant(
                           self.saveGeometry()))
         settings.setValue("MainWindow/State", QtCore.QVariant(
                           self.saveState()))
-        # self.play_controler.quit()
-        save_trackdb = MThread(self.trackdb.save_db)
-        save_trackdb.start()
-        #self.connect(test_th, QtCore.SIGNAL("finished()"), test_th.quit)
-        save_coverdb = MThread(self.coverdb.save_db)
-        save_coverdb.start()
-        #self.connect(test_th1, QtCore.SIGNAL("finished()"), test_th.quit)
+        self.save_sss()
+        MThread(self.trackdb.save_db).start()
+        # save_trackdb.start()
+        # self.connect(test_th, QtCore.SIGNAL("finished()"), test_th.quit)
+        # MThread(self.coverdb.save_db).start()
+        # save_coverdb.start()
+        # self.connect(test_th1, QtCore.SIGNAL("finished()"), test_th.quit)
 
 
 def main():
@@ -270,9 +285,11 @@ def main():
     app = QtGui.QApplication(sys.argv)
     app.setOrganizationName("BK Team")
     app.setOrganizationDomain("github.com/arshavindn/Miusik")
+    app.setApplicationName("Miusik")
     miusik = Miusik()
-    qss_file = open('miusik.qss').read()
-    miusik.setStyleSheet(qss_file)
+    with open('miusik.qss') as qss_file:
+        style = qss_file.read()
+        miusik.setStyleSheet(style)
     miusik.show()
     sys.exit(app.exec_())
 

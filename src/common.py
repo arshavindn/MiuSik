@@ -21,13 +21,20 @@ default_session_settings = {
 
 def format_time(seconds):
     seconds = int(round(seconds))
-    hours = int(seconds) / 3600
-    mins = int(seconds) / 60 - hours * 60
-    secs = int(seconds) - hours * 3600 - mins * 60
+    mins, secs = divmod(seconds, 60)
+    hours, mins = divmod(mins, 60)
     if hours == 0:
         return "%d:%02d" %(mins, secs)
     else:
         return "%02d:%02d:%02d" %(hours, mins, secs)
+
+def reverse_time_str(time_str):
+    lst = time_str.split(':')
+    lst[:] = [int(x) for x in lst]
+    if len(lst) == 2:
+        return lst[0] * 60 + lst[1]
+    elif len(lst) == 3:
+        return lst[0] * 3600 + lst[1] * 60 + lst[2]
 
 
 class VersionError(Exception):

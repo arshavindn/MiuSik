@@ -17,6 +17,20 @@ class Player():
         self.player = Gst.ElementFactory.make("playbin", "player")
         fakesink = Gst.ElementFactory.make("fakesink", "fakesink")
         self.player.set_property("video-sink", fakesink)
+        # self.player = Gst.Pipeline.new("player")
+        # source = Gst.ElementFactory.make("filesrc", "file-source")
+        # decoder = Gst.ElementFactory.make("mad", "mp3-decoder")
+        # conv = Gst.ElementFactory.make("audioconvert", "converter")
+        sink = Gst.ElementFactory.make("directsoundsink", "alsa-output")
+        self.player.set_property("audio-sink", sink)
+        # self.player.add(source)
+        # self.player.add(decoder)
+        # self.player.add(conv)
+        # self.player.add(sink)
+        # source.link(decoder)
+        # decoder.link(conv)
+        # conv.link(sink)
+
         bus = self.player.get_bus()
         bus.add_signal_watch()
         bus.connect("message", self.on_message)
@@ -34,6 +48,7 @@ class Player():
 
     def set_file(self, filepath):
         self.player.set_property('uri', u'file:///' + filepath)
+        # self.player.get_by_name("file-source").set_property("location", filepath)
 
     def get_status(self):
         '''
@@ -58,7 +73,6 @@ class Player():
                     return -3
 
     def play_given_song(self, loc):
-        print 'nah'
         self.player.set_state(Gst.State.NULL)
         self.set_file(loc)
         self.player.set_state(Gst.State.PLAYING)
@@ -101,7 +115,7 @@ class Player():
         '''
         Return volume rate (0.0 -> 1.0).
         '''
-        return self.player.get_volume(GstAudio.StreamVolumeFormat.LINEAR)
+        return int(self.player.get_volume(GstAudio.StreamVolumeFormat.LINEAR)*100)
 
     def set_volume(self, rate):
         self.player.set_volume(GstAudio.StreamVolumeFormat.LINEAR, rate/100.0)

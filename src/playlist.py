@@ -7,15 +7,12 @@ except ImportError:
 
 
 class Playlist():
-    def __init__(self, name=None, loc=None):
+    def __init__(self, name=None):
         if name:
             self._name = name
         self.__albums = {}  # pairs of (album, albumartist) tuple and Album object
         self.__total_duration = 0
         self.played_songs = []
-        if loc:
-            self._loc = loc
-            self.load_self()
 
     def __len__(self):
         """
@@ -25,6 +22,9 @@ class Playlist():
         for album in self.get_albums():
             songs_num += len(album)
         return songs_num
+
+    def get_playlist_duration(self):
+        return self.__total_duration
 
     def set_loc(self, loc):
         self._loc = loc
@@ -66,7 +66,7 @@ class Playlist():
             loc_list.extend(album.get_songs())
         return loc_list
 
-    def add_track(self, loc, trackdb, coverdb):
+    def add_track(self, loc, trackdb):
         track = trackdb.get_track_by_loc(loc)
         if not track:
             track = Track(loc)
@@ -85,11 +85,11 @@ class Playlist():
         album.unchecked_add_song(track)
         self.__total_duration += track.get_tag_raw('__length')
 
-        cover = coverdb.get_cover(tr_album, tr_albumartist)
-        if not cover:
-            tr_cover = track.get_tag_disk('cover')
-            if tr_cover:
-                coverdb.add_cover(tr_album, tr_albumartist, tr_cover)
+        # cover = coverdb.get_cover(tr_album, tr_albumartist)
+        # if not cover:
+        #     tr_cover = track.get_tag_disk('cover')
+        #     if tr_cover:
+        #         coverdb.add_cover(tr_album, tr_albumartist, tr_cover)
         return track
 
     def remove_track(self, loc, trackdb):
@@ -116,8 +116,7 @@ class Playlist():
         with open(loc, 'w+b') as output:
             pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
 
-    def load_self(self, loc=None):
-        if not loc:
-            loc = self._loc
-        with open(loc, 'rb') as input:
-            self = pickle.load(input)
+    def load_data(self, data):
+        self._name = data[0]
+        self.__albums = data[1]
+        self.__total_duration = data[2]
