@@ -2,6 +2,7 @@
 
 import os
 import gzip
+from copy import copy
 from random import randrange
 try:
     import cPickle as pickle
@@ -16,37 +17,52 @@ from src.playlist import Playlist
 class PlaylistTable(QtGui.QTableWidget, Playlist):
     __all_header = tuple(tag_data.keys())
     shown_header = ['title', 'album', 'artist', '__length']
-    sort_items = QtCore.pyqtSignal(int)
+    __horiz_header_state = None
+
+    # def __new__(cls, *args, **kwargs):
+    #     pass
+    @staticmethod
+    def save_header_state(instance=None, state=None):
+        if state:
+            PlaylistTable.__horiz_header_state = state
+        elif isinstance(instance, PlaylistTable):
+            PlaylistTable.__horiz_header_state = instance.horizontalHeader().saveState()
+        else:
+            return False
+        return True
 
     def __init__(self, name, parent=None):
         QtGui.QTableWidget.__init__(self, parent)
         Playlist.__init__(self, name)
         self.setFrameShape(QtGui.QFrame.NoFrame)
-        self.setFrameShadow(QtGui.QFrame.Sunken)
-        self.setLineWidth(0)
+        # self.setFrameShadow(QtGui.QFrame.Sunken)
+        # self.setLineWidth(0)
         self.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.setVerticalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
         self.setHorizontalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
-        self.setShowGrid(True)
-        self.setGridStyle(QtCore.Qt.SolidLine)
+        self.setShowGrid(False)
         self.setWordWrap(False)
         self.verticalHeader().setVisible(False)
-        self.horizontalHeader().setMovable(True)
-        self.horizontalHeader().setDragEnabled(True)
-        self.horizontalHeader().setDragDropMode(QtGui.QAbstractItemView.InternalMove)
+        self.verticalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
+        self.verticalHeader().setDefaultSectionSize(24)
         self.setSortingEnabled(True)
         self.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
         self.setAlternatingRowColors(True)
         self.setRowCount(0)
-
         self.set_headers()
+        if PlaylistTable.__horiz_header_state is None:
+            self.horizontalHeader().setMovable(True)
+            self.horizontalHeader().setDragEnabled(True)
+            self.horizontalHeader().setDragDropMode(QtGui.QAbstractItemView.InternalMove)
+            PlaylistTable.__horiz_header_state = self.horizontalHeader().saveState()
+        else:
+            horiz_header = QtGui.QHeaderView(QtCore.Qt.Horizontal)
+            horiz_header.restoreState(PlaylistTable.__horiz_header_state)
+            self.setHorizontalHeader(horiz_header)
         # TODO: creat menu when right click on header,
         # so user can set show or hide some tag raw
         # header_right_menu
-
-    def print_sorted_col(self, col):
-        print col
 
     def set_headers(self):
         self.setColumnCount(len(self.__all_header) + 1)
@@ -93,10 +109,8 @@ class PlaylistTable(QtGui.QTableWidget, Playlist):
             It's useful when the table is re-sorted.
         """
         loc_header_index = self.get_headertag_index("__loc")
-        result = []
         for row in range(self.rowCount()):
-            result.append(unicode(self.item(row, loc_header_index).text()))
-        return result
+            yield unicode(self.item(row, loc_header_index).text())
 
     def add_track(self, loc, trackdb):
         """
@@ -303,7 +317,7 @@ class CustomTabWidget(QtGui.QTabWidget):
         """
         name = unicode(qname)
         self.widget(int).rename(name)
-        print self.widget(int).get_name()
+        # print self.widget(int).get_name()
 
     def get_playlist_num(self):
         """
@@ -320,13 +334,13 @@ class CustomTabWidget(QtGui.QTabWidget):
         """
         if self.current_playlist_index != -1:
             if repeat == "Off" or repeat == "Playlist":
-                self.list_for_play = self.get_current_playlist().get_loc_list_gui()
+                self.list_for_play = list(self.get_current_playlist().get_loc_list_gui())
             elif repeat == "Song":
                 self.list_for_play = [self.current_song]
             elif repeat == "Album":
                 cr_album_tracks = self.current_album.get_songs()
                 self.list_for_play = filter(lambda track: track in cr_album_tracks,
-                                            self.get_current_playlist().get_loc_list_gui())
+                                            list(self.get_current_playlist().get_loc_list_gui()))
         else:
             self.list_for_play = []
 
@@ -367,7 +381,7 @@ class CustomTabWidget(QtGui.QTabWidget):
                 for index in range(self.get_playlist_num()):
                     playlist = self.widget(index)
                     data = (playlist.get_name(), playlist.get_albums_dict(),
-                            playlist.get_total_duration(), playlist.get_loc_list_gui())
+                            playlist.get_total_duration(), list(playlist.get_loc_list_gui()))
                     pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
 
 # end class CustomTabWidget

@@ -480,7 +480,7 @@ class Ui_main_window(object):
 
         self.setup_playlist_view(main_window)
         self.retranslateUi(main_window)
-        # self.playlists_tabs.setCurrentIndex(0)
+        # self.pl_tabs.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(main_window)
 
     def retranslateUi(self, main_window):
@@ -497,8 +497,8 @@ class Ui_main_window(object):
 
     def setup_playlist_view(self, main_window):
         # playlistview.CustomTabWidget.__init__(self, main_window)
-        self.playlists_tabs = playlistview.CustomTabWidget(self.playlists_frame)
-        self.horizontalLayout.addWidget(self.playlists_tabs)
+        self.pl_tabs = playlistview.CustomTabWidget(self.playlists_frame)
+        self.horizontalLayout.addWidget(self.pl_tabs)
 
 
 

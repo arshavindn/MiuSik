@@ -19,7 +19,7 @@ class Playlist():
             Return number of songs in playlist.
         """
         songs_num = 0
-        for album in self.get_albums():
+        for album in self.iteralbums():
             songs_num += len(album)
         return songs_num
 
@@ -37,12 +37,12 @@ class Playlist():
         return self.__albums.iterkeys()
 
     def get_album_from_loc(self, loc):
-        for album in self.get_albums():
+        for album in self.iteralbums():
             if album.has_track(loc):
                 return album
         return None
 
-    def get_albums(self):
+    def iteralbums(self):
         return self.__albums.itervalues()
 
     def get_total_duration(self):
@@ -62,7 +62,7 @@ class Playlist():
             Return a list of tracks' location
         """
         loc_list = []
-        for album in self.get_albums():
+        for album in self.iteralbums():
             loc_list.extend(album.get_songs())
         return loc_list
 
