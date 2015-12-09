@@ -231,18 +231,12 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
         self.pl_tabs.addTab()
         # self.pl_tabs.tab_bar.start_rename(index)
 
-    def call_get_locs(self):
-        self.pl_tabs.get_list_for_play(self.repeat)
-
-    def run_call_get_locs(self):
-        QtCore.QTimer.singleShot(500, self.call_get_locs)
-
     def tab_added_handler(self, index):
         self.connect(self.pl_tabs.currentWidget(), QtCore.SIGNAL("cellDoubleClicked(int,int)"),
                      self.row_double_click)
         self.connect(self.pl_tabs.currentWidget().horizontalHeader(),
                      QtCore.SIGNAL("sortIndicatorChanged(int, Qt::SortOrder)"),
-                     self.run_call_get_locs)
+                     lambda: QtCore.QTimer.singleShot(500, lambda: self.pl_tabs.get_list_for_play(self.repeat)))
         self.connect(self.pl_tabs.currentWidget().horizontalHeader(),
                      QtCore.SIGNAL("sectionMoved(int,int,int)"), self.table_header_moved)
         self.connect(self.pl_tabs.currentWidget().horizontalHeader(),
