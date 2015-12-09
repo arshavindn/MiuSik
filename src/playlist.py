@@ -1,15 +1,18 @@
-from track import Track
-from album import Album
+
 try:
     import cPickle as pickle
 except ImportError:
     import pickle
+from collections import OrderedDict
+from track import Track
+from album import Album
 
 
 class Playlist():
     def __init__(self, name=None):
         if name:
             self._name = name
+        self.locs_gui = OrderedDict()  # a dict with keys are locs and values are rows in playlist table
         self.__albums = {}  # pairs of (album, albumartist) tuple and Album object
         self.__total_duration = 0
         self.played_songs = []

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import os
 import gzip
-from copy import copy
 from random import randrange
 try:
     import cPickle as pickle
@@ -12,6 +10,20 @@ from PyQt4 import QtGui, QtCore
 from src.metadata.tags import tag_data
 from src.common import format_time
 from src.playlist import Playlist
+
+
+class CellWidget(QtGui.QWidget):
+    def __init__(self, icon, parent=None):
+        super(CellWidget, self).__init__(parent)
+        self.label = QtGui.QLabel()
+        self.label.setMaximumSize(12, 12)
+        self.label.setScaledContents(True)
+        self.label.setPixmap(QtGui.QPixmap(icon))
+        hbox = QtGui.QHBoxLayout(self)
+        hbox.addWidget(self.label)
+        hbox.setAlignment(QtCore.Qt.AlignCenter)
+        hbox.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(hbox)
 
 
 class PlaylistTable(QtGui.QTableWidget, Playlist):
@@ -110,7 +122,9 @@ class PlaylistTable(QtGui.QTableWidget, Playlist):
         """
         loc_header_index = self.get_headertag_index("__loc")
         for row in range(self.rowCount()):
-            yield unicode(self.item(row, loc_header_index).text())
+            self.locs_gui[unicode(self.item(row, loc_header_index).text())] = row
+            # yield unicode(self.item(row, loc_header_index).text())
+        return self.locs_gui.keys()
 
     def add_track(self, loc, trackdb):
         """
@@ -137,6 +151,9 @@ class PlaylistTable(QtGui.QTableWidget, Playlist):
             item = QtGui.QTableWidgetItem(QtCore.QString(value))
             col = tag_index + 1
             self.setItem(row, col, item)
+
+    def del_row(self, row):
+        pass
 
 
 class TabNameLineEdit(QtGui.QLineEdit):
@@ -266,9 +283,9 @@ class CustomTabWidget(QtGui.QTabWidget):
         # will be current tab (that contains a playlist).
         # TODO: so, how to set current_playlist satifying this condition.
         self.current_playlist_index = -1
-        self.current_song = None  # location of current song.
+        self.current_song = None  # a tuple of row in table and location of current song.
         self.current_album = None  # Album obj of current album.
-        # self.get_list_for_play()
+        self.played_songs = []  # tuple of row, song, index
 
         # Tab Bar
         # self.tab = QtGui.QTabBar()
@@ -325,22 +342,28 @@ class CustomTabWidget(QtGui.QTabWidget):
         """
         return self.count()
 
-    def get_list_for_play(self, repeat):
+    def get_list_for_play(self, repeat, use_locs_gui=False):
         """
             Get a list contains song from which can choose the next song.
             If repeat off or playlist, return whole current playlist,
             if repeat is song, return a list has only current song,
             if repeat is album, return a list that is album of current song.
         """
+        # nah = list(self.get_current_playlist().get_loc_list_gui())
+        # print
+        # for i in nah:
+        #     print i
         if self.current_playlist_index != -1:
+            get_lst = lambda: self.get_current_playlist().locs_gui.keys() if use_locs_gui \
+                              else self.get_current_playlist().get_loc_list_gui()
             if repeat == "Off" or repeat == "Playlist":
-                self.list_for_play = list(self.get_current_playlist().get_loc_list_gui())
+                self.list_for_play = get_lst()  # self.get_current_playlist().get_loc_list_gui()
             elif repeat == "Song":
                 self.list_for_play = [self.current_song]
             elif repeat == "Album":
                 cr_album_tracks = self.current_album.get_songs()
-                self.list_for_play = filter(lambda track: track in cr_album_tracks,
-                                            list(self.get_current_playlist().get_loc_list_gui()))
+                self.list_for_play = [loc for loc in get_lst()
+                                      if loc in cr_album_tracks]
         else:
             self.list_for_play = []
 
@@ -367,10 +390,12 @@ class CustomTabWidget(QtGui.QTabWidget):
                         data = pickle.load(f)
                         table = PlaylistTable(data[0])
                         table.load_data(data[:3])
+                        table.setSortingEnabled(False)
                         for loc in data[-1]:
                             track = trackdb.get_track_by_loc(loc)
                             table.fill_row(track)
                         self.addTab(table)
+                        table.setSortingEnabled(True)
                     except EOFError:
                         break
         except IOError:
@@ -378,11 +403,11 @@ class CustomTabWidget(QtGui.QTabWidget):
 
     def save_session(self, loc):
         with gzip.open(loc, "w+b") as f:
-                for index in range(self.get_playlist_num()):
-                    playlist = self.widget(index)
-                    data = (playlist.get_name(), playlist.get_albums_dict(),
-                            playlist.get_total_duration(), list(playlist.get_loc_list_gui()))
-                    pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
+            for index in range(self.get_playlist_num()):
+                playlist = self.widget(index)
+                data = (playlist.get_name(), playlist.get_albums_dict(),
+                        playlist.get_total_duration(), list(playlist.get_loc_list_gui()))
+                pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
 
 # end class CustomTabWidget
 
