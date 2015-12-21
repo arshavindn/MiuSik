@@ -39,6 +39,9 @@ def run_in_thread(func):
     return wrapped_f
 
 
+# end class TrackContextMenu
+
+
 class PlayerControler(QtCore.QThread):
     def __init__(self):
         super(self.__class__, self).__init__()
@@ -92,7 +95,7 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
                      self.volume_handle)
         self.connect(self.seek_slider, QtCore.SIGNAL("sliderMoved(int)"),
                      self.seeker_dragging)
-        self.app_info_button.clicked.connect(self.nah)
+        # self.app_info_button.clicked.connect(self.nah)
 
         # add files handler
         self.add_file_button.clicked.connect(self.open_files_callback)
@@ -100,7 +103,7 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
         self.pl_tabs.plusButton.clicked.connect(self.add_tab_callback)
         self.connect(self.pl_tabs, QtCore.SIGNAL("tab_added(int)"), self.tab_added_handler)
         # test gc collect
-        self.app_info_button.clicked.connect(self.test_gc)
+        # self.app_info_button.clicked.connect(self.test_gc)
         # previous sesion
         PlaylistTable.save_header_state(state=settings.value("HeaderState").toByteArray())
         self.load_sss()
@@ -114,11 +117,27 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
         #         settings.value("HeaderState").toByteArray())
     # end __init__ method
 
-    def test_gc(self):
-        print "test gc", gc.collect()
+    # def test_gc(self):
+    #     print "test gc", gc.collect()
 
-    def nah(self):
-        print self.pl_tabs.list_for_play
+    # def nah(self):
+    #     print self.pl_tabs.list_for_play
+
+    def createAction(self, text, slot=None, shortcut=None, icon=None,
+                     tip=None, checkable=False, signal="triggered()"):
+        action = QtGui.QAction(text, self)
+        if icon is not None:
+            action.setIcon(QtGui.QIcon(":/icons/{0}.png".format(icon)))
+        if shortcut is not None:
+            action.setShortcut(shortcut)
+        if tip is not None:
+            action.setToolTip(tip)
+            action.setStatusTip(tip)
+        if slot is not None:
+            self.connect(action, QtCore.SIGNAL(signal), slot)
+        if checkable:
+            action.setCheckable(True)
+        return action
 
     def set_cover(self, trackobj):
         pixmap = QtGui.QPixmap()
@@ -128,6 +147,38 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
         except TypeError:
             pixmap.load(":/icons/default-cover.png")
         self.cover.setPixmap(pixmap)
+
+    def track_menu_about_show(self):
+        """
+            Handle the aboutToShow signal of track context menu.
+        """
+        # TODO: Need more work here
+        if self.pl_tabs.currentWidget().menu.loc == self.pl_tabs.current_song:
+            self.pl_tabs.currentWidget().menu.actions()[0].setEnabled(False)  # play
+        else:
+            self.pl_tabs.currentWidget().menu.actions()[1].setEnabled(True)  # pause
+
+    def track_right_click(self, action):
+        """
+            Handle the actions of track context menu when it triggered.
+        """
+        action_name = str(action.text())
+        if action_name == "Play":
+            self.play_song_handle(self.pl_tabs.currentWidget().menu.loc, self.pl_tabs.currentWidget().menu.row)
+        elif action_name == "Pause":
+            self.pause_handler()
+        elif action_name == "Cut":
+            pass
+        elif action_name == "Copy":
+            pass
+        elif action_name == "Paste":
+            pass
+        elif action_name == "Remove from playlist":
+            pass
+        elif action_name == "Delete from disk":
+            pass
+        elif action_name == "Properties":
+            pass
 
     def table_header_moved(self, logicalIndex, oldVisualIndex, newVisualIndex):
         if self.sender() == self.pl_tabs.currentWidget().horizontalHeader():
@@ -214,15 +265,19 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
         self.play_pause_button.setIcon(icon)
         self.play_controler.is_playing = True
 
+    def pause_handler(self):
+        self.play_controler.player.pause()
+        # icon.addPixmap(QtGui.QPixmap(":/icons/play.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.seek_slider_timer.stop()
+        self.play_controler.is_playing = False
+        self.play_pause_button.setIcon(QtGui.QIcon(":/icons/play.png"))
+
     def play_toggle(self):
         state = self.play_controler.player.get_status()
         icon = QtGui.QIcon()
         self.play_controler.is_playing = True
         if state == playerbin.IS_PLAYING:
-            self.play_controler.player.pause()
-            icon.addPixmap(QtGui.QPixmap(":/icons/play.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-            self.seek_slider_timer.stop()
-            self.play_controler.is_playing = False
+            self.pause_handler()
         elif state == playerbin.NOT_PLAYING:
             self.play_song_handle(self.pl_tabs.current_song)
             icon.addPixmap(QtGui.QPixmap(":/icons/pause.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -243,9 +298,9 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
             self.play_song_handle(self.pl_tabs.current_song)
         else:
             self.play_controler.player.stop()
-            self.play_controler.player.set_file(self.pl_tabs.current_song)
             trackobj = self.trackdb.get_track_by_loc(self.pl_tabs.current_song)
             self.set_playing_state(trackobj)
+            self.play_controler.player.set_file(self.pl_tabs.current_song)
 
     def set_menu_action(self, button, func, val):
         for act in button.menu().actions():
@@ -267,6 +322,8 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
                      QtCore.SIGNAL("sectionMoved(int,int,int)"), self.table_header_moved)
         self.connect(self.pl_tabs.currentWidget().horizontalHeader(),
                      QtCore.SIGNAL("sectionResized(int,int,int)"), self.table_header_resized)
+        self.connect(self.pl_tabs.currentWidget().menu, QtCore.SIGNAL("triggered(QAction*)"), self.track_right_click)
+        self.connect(self.pl_tabs.currentWidget().menu, QtCore.SIGNAL("aboutToShow()"), self.track_menu_about_show)
         if index == self.pl_tabs.current_playlist_index:
             self.pl_tabs.setCurrentIndex(index)
             try:
@@ -307,11 +364,11 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
 
     def shuffle_triggered(self, act):
         self.shuffle = str(act.text())
-        print self.shuffle, self.repeat
+        # print self.shuffle, self.repeat
 
     def repeat_triggered(self, act):
         self.repeat = str(act.text())
-        print self.shuffle, self.repeat
+        # print self.shuffle, self.repeat
         self.pl_tabs.get_list_for_play(self.repeat)
 
     def load_sss(self, loc=None):

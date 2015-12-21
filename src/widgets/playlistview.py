@@ -9,7 +9,6 @@ except ImportError:
 from PyQt4 import QtGui, QtCore
 from src.metadata.tags import tag_data
 from src.common import format_time
-from src.track import Track
 from src.playlist import Playlist
 
 
@@ -26,11 +25,26 @@ class CellWidget(QtGui.QWidget):
         hbox.setContentsMargins(0, 0, 0, 0)
         self.setLayout(hbox)
 
+class TrackContextMenu(QtGui.QMenu):
+    def __init__(self, parent):
+        super(TrackContextMenu, self).__init__(parent)
+        action_names = ("Play", "Pause", None, "Cut", "Copy", "Paste", None,
+                        "Remove from playlist", "Delete from disk", None, "Properties")
+        for action in action_names:
+            if action is None:
+                self.addSeparator()
+            else:
+                self.addAction(action)
+        self.loc = None
+        self.row = None
+
 
 class PlaylistTable(QtGui.QTableWidget, Playlist):
     __all_header = tuple(tag_data.keys())
     shown_header = ['title', 'album', 'artist', '__length']
     __horiz_header_state = None
+
+    context_menu_triggered = QtCore.pyqtSignal(QtCore.QString, int, QtCore.QString)
 
     # def __new__(cls, *args, **kwargs):
     #     pass
@@ -74,6 +88,8 @@ class PlaylistTable(QtGui.QTableWidget, Playlist):
             horiz_header = QtGui.QHeaderView(QtCore.Qt.Horizontal)
             horiz_header.restoreState(PlaylistTable.__horiz_header_state)
             self.setHorizontalHeader(horiz_header)
+
+        self.menu = TrackContextMenu(self)
         # TODO: creat menu when right click on header,
         # so user can set show or hide some tag raw
         # header_right_menu
@@ -89,6 +105,18 @@ class PlaylistTable(QtGui.QTableWidget, Playlist):
                     self.setHorizontalHeaderItem(col, item)
                 if self.__all_header[col-1] not in self.shown_header:
                     self.hideColumn(col)
+
+    def contextMenuEvent(self, event):
+        # add other required actions
+        self.menu.popup(QtGui.QCursor.pos())
+        header_height = self.horizontalHeader().size().height()
+        self.menu.row = self.rowAt(self.mapFromGlobal(QtGui.QCursor.pos()).y() - header_height)
+        try:
+            self.menu.loc = self.get_tag_in_row("__loc", self.menu.row)
+        except AttributeError:
+            pass
+
+        self.menu.popup(QtGui.QCursor.pos())
 
     def get_headertag_index(self, tag):
         """
@@ -404,7 +432,7 @@ class CustomTabWidget(QtGui.QTabWidget):
                         self.addTab(table)
                         table.setSortingEnabled(True)
                     except EOFError:
-                        break
+                        break  # break when end of pickle file
         except IOError:
             pass
 
