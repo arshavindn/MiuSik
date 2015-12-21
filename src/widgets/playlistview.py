@@ -9,6 +9,7 @@ except ImportError:
 from PyQt4 import QtGui, QtCore
 from src.metadata.tags import tag_data
 from src.common import format_time
+from src.track import Track
 from src.playlist import Playlist
 
 
@@ -62,6 +63,7 @@ class PlaylistTable(QtGui.QTableWidget, Playlist):
         self.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
         self.setAlternatingRowColors(True)
         self.setRowCount(0)
+        self.setAutoScroll(True)
         self.set_headers()
         if PlaylistTable.__horiz_header_state is None:
             self.horizontalHeader().setMovable(True)
@@ -121,6 +123,7 @@ class PlaylistTable(QtGui.QTableWidget, Playlist):
             It's useful when the table is re-sorted.
         """
         loc_header_index = self.get_headertag_index("__loc")
+        self.locs_gui.clear()
         for row in range(self.rowCount()):
             self.locs_gui[unicode(self.item(row, loc_header_index).text())] = row
             # yield unicode(self.item(row, loc_header_index).text())
@@ -366,6 +369,7 @@ class CustomTabWidget(QtGui.QTabWidget):
                                       if loc in cr_album_tracks]
         else:
             self.list_for_play = []
+        # print self.list_for_play
 
     def choose_next_song(self, shuffle):
         """
@@ -393,7 +397,10 @@ class CustomTabWidget(QtGui.QTabWidget):
                         table.setSortingEnabled(False)
                         for loc in data[-1]:
                             track = trackdb.get_track_by_loc(loc)
-                            table.fill_row(track)
+                            if track is None:
+                                table.add_track(loc, trackdb)
+                            else:
+                                table.fill_row(track)
                         self.addTab(table)
                         table.setSortingEnabled(True)
                     except EOFError:
