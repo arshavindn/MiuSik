@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import gc, os, codecs
+import gc, os
 from time import sleep
 import ConfigParser
 from PyQt4 import QtGui, QtCore
@@ -28,6 +28,15 @@ class MThread(QtCore.QThread):
             del self.kwargs['time']
         self.func(*self.args, **self.kwargs)
 # end class MThead
+
+def run_in_thread(func):
+    """
+        Decoration for run thread.
+    """
+    def wrapped_f(*args, **kwargs):
+        MThread(func, *args, **kwargs).start()
+
+    return wrapped_f
 
 
 class PlayerControler(QtCore.QThread):
@@ -111,6 +120,15 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
     def nah(self):
         print self.pl_tabs.list_for_play
 
+    def set_cover(self, trackobj):
+        pixmap = QtGui.QPixmap()
+        try:
+            data = trackobj.get_tag_disk('cover')[0].data
+            pixmap.loadFromData(data)
+        except TypeError:
+            pixmap.load(":/icons/default-cover.png")
+        self.cover.setPixmap(pixmap)
+
     def table_header_moved(self, logicalIndex, oldVisualIndex, newVisualIndex):
         if self.sender() == self.pl_tabs.currentWidget().horizontalHeader():
             # self.pl_tabs.currentWidget().save_header_state()
@@ -141,18 +159,24 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
             icon.addPixmap(QtGui.QPixmap(":/icons/volume-full.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.volume_button.setIcon(icon)
 
+    def set_playing_state(self, trackobj, song_len=None):
+        self.playing_song.setText(trackobj.get_tag_raw('title', True))
+        self.artist.setText(trackobj.get_tag_raw('artist', True))
+        self.set_cover(trackobj)
+        self.position.setText("0:00")
+        if not song_len:
+            song_len = trackobj.get_tag_raw('__length')
+        self.duration.setText(common.format_time(int(round(song_len))))
+        self.seek_slider.setValue(0)
+
     def play_song_handle(self, song, row=None):
         self.play_controler.player.play_given_song(song)
-        current_song_len = \
-            self.trackdb.get_track_by_loc(song).get_tag_raw('__length')
-        self.choose_next_timer.start(current_song_len*1000)
-        self.position.setText("00:00")
-        self.seek_slider.setValue(0)
+        trackobj = self.trackdb.get_track_by_loc(song)
+        current_song_len = trackobj.get_tag_raw('__length')
+        self.choose_next_timer.start(current_song_len*1000 + 500)
         self.seek_slider.setRange(0, int(round(current_song_len)))
-        self.duration.setText(common.format_time(int(round(current_song_len))))
         self.seek_slider_timer.start(1000)
-        self.playing_song.setText(self.trackdb.get_track_by_loc(song).get_tag_raw('title', True))
-        self.artist.setText(self.trackdb.get_track_by_loc(song).get_tag_raw('artist', True))
+        self.set_playing_state(trackobj)
         self.pl_tabs.current_song = song
         self.pl_tabs.current_album = \
             self.pl_tabs.currentWidget().get_album_from_loc(song)
@@ -160,12 +184,12 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
             table = self.pl_tabs.widget(self.pl_tabs.played_songs[-1][-1])
             old_row = table.locs_gui[self.pl_tabs.played_songs[-1][0]]
             table.removeCellWidget(old_row, 0)
-        except IndexError:
+        except (IndexError, KeyError):
             pass
         if not row:
             row = self.pl_tabs.get_current_playlist().locs_gui[song]
         self.pl_tabs.get_current_playlist().setCellWidget(row, 0, CellWidget(":/icons/play.png"))
-        self.pl_tabs.get_current_playlist().scrollToItem(QtGui.QTableWidgetItem(song), 3)
+        self.pl_tabs.get_current_playlist().scrollToItem(self.pl_tabs.get_current_playlist().item(row, 1), 0)
         self.pl_tabs.get_current_playlist().played_songs.append(song)
         self.pl_tabs.played_songs.append((song, self.pl_tabs.currentIndex()))
 
@@ -180,7 +204,7 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
     def row_double_click(self, row):
         loc_inx = self.pl_tabs.currentWidget().get_headertag_index("__loc")
         loc = unicode(self.pl_tabs.currentWidget().item(row, loc_inx).text())
-        self.play_song_handle(loc)
+        self.play_song_handle(loc, row)
         curr_index = self.pl_tabs.currentIndex()
         if self.pl_tabs.current_playlist_index != curr_index:
             self.pl_tabs.current_playlist_index = curr_index
@@ -220,6 +244,8 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
         else:
             self.play_controler.player.stop()
             self.play_controler.player.set_file(self.pl_tabs.current_song)
+            trackobj = self.trackdb.get_track_by_loc(self.pl_tabs.current_song)
+            self.set_playing_state(trackobj)
 
     def set_menu_action(self, button, func, val):
         for act in button.menu().actions():
@@ -343,14 +369,17 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
 
 def main():
     import sys
+    from gi.repository import GObject
     app = QtGui.QApplication(sys.argv)
     app.setOrganizationName("BK Team")
     app.setOrganizationDomain("github.com/arshavindn/Miusik")
     app.setApplicationName("Miusik")
     miusik = Miusik()
+    miusik.setWindowTitle("Miusik")
     with open('miusik.qss') as qss_file:
         style = qss_file.read()
         miusik.setStyleSheet(style)
+    GObject.threads_init()
     miusik.show()
     sys.exit(app.exec_())
 
