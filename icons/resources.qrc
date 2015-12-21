@@ -10,7 +10,6 @@
         <file alias="pause.png">play_control/pause.png</file>
         <file alias="play.png">play_control/play.png</file>
         <file alias="previous.png">play_control/previous.png</file>
-        <file alias="stop.png">play_control/stop.png</file>
         <file alias="shuffle.png">play_control/shuffle.png</file>
         <file alias="repeat.png">play_control/repeat.png</file>
         <file alias="volume-mute.png">play_control/volume-mute.png</file>
@@ -19,7 +18,8 @@
         <file alias="volume-2.png">play_control/volume-2.png</file>
         <file alias="volume-full.png">play_control/volume-full.png</file>
 
-        <file alias="add_tab.png">tab_bar/add_tab.png</file>
+        <!-- <file alias="add_tab.png">tab_bar/add_tab.png</file> -->
+        <file alias="default-cover.png">cover_default/default-cover.png</file>
 
         <file alias="add_file.png">toolbar/add_file.png</file>
         <file alias="info.png">toolbar/info.png</file>
