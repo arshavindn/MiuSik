@@ -43,11 +43,12 @@ def run_in_thread(func):
 
 
 class PlayerControler(QtCore.QThread):
-    def __init__(self):
-        super(self.__class__, self).__init__()
+    def __init__(self, parent=None):
+        super(self.__class__, self).__init__(parent)
 
         self.player = playerbin.Player()
         self.is_playing = False
+
 
 # end class PlayerControler
 
@@ -87,7 +88,7 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
         self.seek_slider_timer = QtCore.QTimer()
         self.seek_slider_timer.timeout.connect(self.seek_slider_move)
 
-        self.play_controler = PlayerControler()
+        self.play_controler = PlayerControler(self)
         self.play_controler.start()
         self.play_pause_button.clicked.connect(self.play_toggle)
         self.next_button.clicked.connect(self.next_btn_click)
@@ -262,7 +263,7 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
         # icon.addPixmap(QtGui.QPixmap(":/icons/play.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.seek_slider_timer.stop()
         self.play_controler.is_playing = False
-        self.play_pause_button.setIcon(QtGui.QIcon(":/icons/play.png"))
+        self.play_pause_button.setIcon(QtGui.QIcon(QtGui.QPixmap(":/icons/play.png")))
 
     def play_toggle(self):
         state = self.play_controler.player.get_status()
@@ -270,6 +271,7 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
         self.play_controler.is_playing = True
         if state == playerbin.IS_PLAYING:
             self.pause_handler()
+            return
         elif state == playerbin.NOT_PLAYING:
             self.play_song_handle(self.pl_tabs.current_song)
             icon.addPixmap(QtGui.QPixmap(":/icons/pause.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
