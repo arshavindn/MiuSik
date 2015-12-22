@@ -500,7 +500,7 @@ class Ui_main_window(object):
 
 
 
-from PyQt4 import phonon
+# from PyQt4 import phonon
 import resources_rc
 
 def main():

@@ -84,7 +84,7 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
         self.choose_next_timer = QtCore.QTimer()
         self.choose_next_timer.timeout.connect(self.next_btn_click)
 
-        self.seek_slider_timer  =QtCore.QTimer()
+        self.seek_slider_timer = QtCore.QTimer()
         self.seek_slider_timer.timeout.connect(self.seek_slider_move)
 
         self.play_controler = PlayerControler()
@@ -112,6 +112,7 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
         self.restoreGeometry(
                 settings.value("MainWindow/Geometry").toByteArray())
         self.restoreState(settings.value("MainWindow/State").toByteArray())
+        self.app_info_button.clicked.connect(self.show_about_dialog)
         # for tab_index in range(self.pl_tabs.count()):
         #     self.pl_tabs.widget(tab_index).horizontalHeader().restoreState(
         #         settings.value("HeaderState").toByteArray())
@@ -123,21 +124,12 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
     # def nah(self):
     #     print self.pl_tabs.list_for_play
 
-    def createAction(self, text, slot=None, shortcut=None, icon=None,
-                     tip=None, checkable=False, signal="triggered()"):
-        action = QtGui.QAction(text, self)
-        if icon is not None:
-            action.setIcon(QtGui.QIcon(":/icons/{0}.png".format(icon)))
-        if shortcut is not None:
-            action.setShortcut(shortcut)
-        if tip is not None:
-            action.setToolTip(tip)
-            action.setStatusTip(tip)
-        if slot is not None:
-            self.connect(action, QtCore.SIGNAL(signal), slot)
-        if checkable:
-            action.setCheckable(True)
-        return action
+    def show_about_dialog(self):
+        from src.widgets.about_dialog import Ui_Dialog
+        Dialog = QtGui.QDialog(self)
+        ui = Ui_Dialog()
+        ui.setupUi(Dialog)
+        Dialog.show()
 
     def set_cover(self, trackobj):
         pixmap = QtGui.QPixmap()
@@ -156,7 +148,7 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
         if self.pl_tabs.currentWidget().menu.loc == self.pl_tabs.current_song:
             self.pl_tabs.currentWidget().menu.actions()[0].setEnabled(False)  # play
         else:
-            self.pl_tabs.currentWidget().menu.actions()[1].setEnabled(True)  # pause
+            self.pl_tabs.currentWidget().menu.actions()[1].setEnabled(False)  # pause
 
     def track_right_click(self, action):
         """

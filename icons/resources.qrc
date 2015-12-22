@@ -1,6 +1,7 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
     <qresource prefix="/icons">
+        <file alias="miusik.png">app/miusik.png</file>
 
         <file alias="artistinfo.png">main_layout_switch/artistinfo.png</file>
         <file alias="lyrics.png">main_layout_switch/lyrics.png</file>
