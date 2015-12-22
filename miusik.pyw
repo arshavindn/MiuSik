@@ -217,7 +217,7 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
         self.play_controler.player.play_given_song(song)
         trackobj = self.trackdb.get_track_by_loc(song)
         current_song_len = trackobj.get_tag_raw('__length')
-        self.choose_next_timer.start(current_song_len*1000 + 500)
+        self.choose_next_timer.start(int(round(current_song_len))*1000 + 1000)
         self.seek_slider.setRange(0, int(round(current_song_len)))
         self.seek_slider_timer.start(1000)
         self.set_playing_state(trackobj)
@@ -243,7 +243,7 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
 
     def seeker_dragging(self, pos):
         self.play_controler.player.seek(pos)
-        self.choose_next_timer.start((self.seek_slider.maximum() - self.seek_slider.value())*1000)
+        self.choose_next_timer.start((self.seek_slider.maximum() - self.seek_slider.value())*1000 + 500)
 
     def row_double_click(self, row):
         loc_inx = self.pl_tabs.currentWidget().get_headertag_index("__loc")
@@ -422,7 +422,7 @@ class Miusik(QtGui.QMainWindow, Ui_main_window):
 
 def main():
     import sys
-    from gi.repository import GObject
+    # from gi.repository import GObject
     app = QtGui.QApplication(sys.argv)
     app.setOrganizationName("BK Team")
     app.setOrganizationDomain("github.com/arshavindn/Miusik")
@@ -436,7 +436,7 @@ def main():
     with open('miusik.qss') as qss_file:
         style = qss_file.read()
         miusik.setStyleSheet(style)
-    GObject.threads_init()
+    # GObject.threads_init()
     miusik.show()
     sys.exit(app.exec_())
 
