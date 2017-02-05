@@ -194,3 +194,43 @@ class Track(object):
             return False
         except Exception:
             return False
+
+    def read_tags(self):
+        """
+            Reads tags from the file for this Track.
+
+            Returns False if unsuccessful, and a Format object from
+            `xl.metadata` otherwise.
+        """
+        try:
+            f = metadata.get_format(self.get_loc())
+            if f is None:
+                self._scan_valid = False
+                return False # not a supported type
+            ntags = f.read_all()
+            for k, v in ntags.iteritems():
+                self.__tags[k] = v
+
+            # remove tags that have been deleted in the file, while
+            # taking into account that the db may have tags not
+            # supported by the file's tag format.
+            if f.others:
+                supported_tags = [ t for t in self.list_tags() \
+                        if not t.startswith("__") ]
+            else:
+                supported_tags = f.tag_mapping.keys()
+            for tag in supported_tags:
+                if tag not in ntags.keys():
+                    self.__tags[tag] = None
+
+            # fill out file specific items
+            mtime = time.ctime(os.path.getmtime(self.get_loc()))
+            self.__tags['__modified'] = mtime
+            # TODO: this probably breaks on non-local files
+            path = os.path.dirname(self.get_loc())
+            self.__tags['__basedir'] = path
+            self._scan_valid = True
+            return f
+        except Exception:
+            self._scan_valid = False
+            return False
